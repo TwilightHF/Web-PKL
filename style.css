@@ -1,152 +1,140 @@
 /* ====================== General ======================*/
 
-body{
+body {
     margin: 0;
     background-color: #f5f7fb;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/*Sidebar*/
+/* Sidebar */
 
-.sidebar{
+.sidebar {
     width: 250px;
     min-height: 100vh;
     background: #13233d;
+    flex-shrink: 0;
 }
 
-.sidebar h4{
+.sidebar h4 {
     font-weight: 700;
 }
 
-.sidebar .nav-link{
+.sidebar .nav-link {
     color: white;
     border-radius: 10px;
     padding: 10px 15px;
     transition: .3s;
 }
 
-.sidebar .nav-link:hover{
+.sidebar .nav-link:hover {
     background: rgba(255,255,255,.15);
 }
 
-.sidebar .nav-link.active{
+.sidebar .nav-link.active {
     background: #0d6efd;
 }
 
-/*Content*/
+/* Content */
 
-.content{
+.content {
     width: 100%;
+    min-width: 0;
 }
 
-/*Navbar*/
+/* Navbar */
 
-.navbar{
+.navbar {
     height: 70px;
     background: white;
 }
 
-.navbar-brand{
+.navbar-brand {
     font-weight: 600;
 }
 
-.navbar img{
+.navbar img {
     width: 40px;
     height: 40px;
 }
 
-/*Cards*/
+/* Cards */
 
-.card{
+.card {
     border: none;
     border-radius: 15px;
     box-shadow: 0 .125rem .5rem rgba(0,0,0,.08);
 }
 
-.card-body h6{
+.card-body h6 {
     color: #6c757d;
     font-size: .9rem;
 }
 
-.card-body h2{
+.card-body h2 {
     font-weight: bold;
 }
 
-/*Card Header*/
+/* Card Header */
 
-.card-header{
+.card-header {
     background: white;
     border-bottom: 1px solid #ececec;
     font-weight: 600;
 }
 
-/*Table*/
+/* Table */
 
-.table{
+.table {
     margin-bottom: 0;
 }
 
-.table thead{
+.table thead {
     background: #f8f9fa;
 }
 
 .table td,
-.table th{
+.table th {
     vertical-align: middle;
 }
 
-.table-hover tbody tr:hover{
+.table-hover tbody tr:hover {
     background: #f8f9fa;
 }
 
-/*Badge*/
+/* Badge */
 
-.badge{
+.badge {
     padding: 7px 12px;
     font-weight: 500;
 }
 
-/*Chart*/
+/* Chart */
 
-canvas{
+canvas {
     max-height: 320px;
 }
 
-/*Recent Activity*/
+/* Recent Activity */
 
-.card a{
+.card a {
     text-decoration: none;
     font-size: .9rem;
 }
 
-.card a:hover{
+.card a:hover {
     text-decoration: underline;
 }
 
-/*Responsive*/
+/* Responsive */
 
-@media (max-width:992px){
-
-    .sidebar{
-    width: 250px;
-    height: 100vh;
-    background: #13233d;
-    position: fixed;
-    top: 0;
-    left: 0;
+@media (max-width: 992px) {
+    .sidebar {
+        width: 220px;
     }
-
 }
 
-@media (max-width:768px){
-
-    .sidebar{
-        display:none;
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
     }
-
-    .content{
-    margin-left: 250px;
-    width: calc(100% - 250px);
-    }
-
 }
