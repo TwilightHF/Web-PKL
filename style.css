@@ -1,0 +1,25 @@
+body{
+    background:#f5f6fa;
+}
+
+.sidebar{
+    width:240px;
+    min-height:100vh;
+}
+
+.content{
+    background:#f5f6fa;
+}
+
+.card{
+    border:none;
+    border-radius:15px;
+}
+
+.nav-link{
+    border-radius:8px;
+}
+
+.nav-link:hover{
+    background:#0d6efd;
+}
