@@ -243,9 +243,13 @@
                         </small>
                     </div>
 
-                    <span class="badge bg-primary fs-6">
-                        Total : 128 Task
-                    </span>
+                 <button class="btn btn-primary">
+
+                                <i class="bi bi-funnel"></i>
+
+                             + buat taks baru
+
+                            </button>
 
                 </div>
 
@@ -271,193 +275,70 @@
 
                         </thead>
 
-                        <tbody>
-
-                            <tr>
-
-                                <td>TK-001</td>
-
-                                <td>Incident</td>
-
-                                <td>PT ABC</td>
-
-                                <td>Jakarta</td>
-
-                                <td>4 Jam</td>
-
-                                <td>
-                                    <span class="text-danger fw-bold">
-                                        00:45:10
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-danger">
-                                        High
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-danger">
-                                        Open
-                                    </span>
-                                </td>
-
-                                <td>
-
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>TK-002</td>
-
-                                <td>Request</td>
-
-                                <td>PT XYZ</td>
-
-                                <td>Bandung</td>
-
-                                <td>8 Jam</td>
-
-                                <td>03:25:50</td>
-
-                                <td>
-                                    <span class="badge bg-warning text-dark">
-                                        Medium
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-primary">
-                                        On Progress
-                                    </span>
-                                </td>
-
-                                <td>
-
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>TK-003</td>
-
-                                <td>Maintenance</td>
-
-                                <td>PT DEF</td>
-
-                                <td>Surabaya</td>
-
-                                <td>12 Jam</td>
-
-                                <td>08:30:25</td>
-
-                                <td>
-                                    <span class="badge bg-success">
-                                        Low
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-warning text-dark">
-                                        Waiting
-                                    </span>
-                                </td>
-
-                                <td>
-
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>TK-004</td>
-
-                                <td>Incident</td>
-
-                                <td>PT MNO</td>
-
-                                <td>Bekasi</td>
-
-                                <td>6 Jam</td>
-
-                                <td>02:10:00</td>
-
-                                <td>
-                                    <span class="badge bg-danger">
-                                        High
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-primary">
-                                        On Progress
-                                    </span>
-                                </td>
-
-                                <td>
-
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                            <tr>
-
-                                <td>TK-005</td>
-
-                                <td>Request</td>
-
-                                <td>PT TELKOM</td>
-
-                                <td>Medan</td>
-
-                                <td>8 Jam</td>
-
-                                <td>05:20:40</td>
-
-                                <td>
-                                    <span class="badge bg-warning text-dark">
-                                        Medium
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-danger">
-                                        Open
-                                    </span>
-                                </td>
-
-                                <td>
-
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
+                    <tbody>
+
+<?php
+$url = "https://script.google.com/macros/s/AKfycbyXNXBuvTJS3fnnCe-CB0DSdUbQafPGym8y8zeqpFku8WMYg6gbL5it91PwHMVdxvHMKg/exec";
+
+$json = file_get_contents($url);
+$data = json_decode($json, true);
+
+if (!empty($data['data'])) :
+    foreach ($data['data'] as $row) :
+?>
+
+<tr>
+    <td><?= $row['id_task'] ?></td>
+    <td><?= $row['tipe'] ?></td>
+    <td><?= $row['customer'] ?></td>
+    <td><?= $row['area'] ?></td>
+    <td><?= $row['sla'] ?></td>
+    <td><?= $row['sisa_waktu'] ?></td>
+
+    <td>
+        <?php
+        $badge = "secondary";
+        if ($row['prioritas'] == "High") $badge = "danger";
+        elseif ($row['prioritas'] == "Medium") $badge = "warning text-dark";
+        elseif ($row['prioritas'] == "Low") $badge = "success";
+        ?>
+        <span class="badge bg-<?= $badge ?>">
+            <?= $row['prioritas'] ?>
+        </span>
+    </td>
+
+    <td>
+        <?php
+        $status = $row['status'];
+
+        if ($status == "Open") {
+            $class = "danger";
+        } elseif ($status == "On Progress") {
+            $class = "primary";
+        } elseif ($status == "Waiting") {
+            $class = "warning text-dark";
+        } else {
+            $class = "success";
+        }
+        ?>
+        <span class="badge bg-<?= $class ?>">
+            <?= $status ?>
+        </span>
+    </td>
+
+    <td>
+        <button class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-eye"></i>
+        </button>
+    </td>
+</tr>
+
+<?php
+    endforeach;
+endif;
+?>
+
+</tbody>
 
                     </table>
 
@@ -699,7 +580,7 @@
 
 </div>
         <script>
-            fetch('sidebar.php')
+            fetch('sidebar.html')
                 .then(res => res.text())
                 .then(html => {
                     document.getElementById('sidebar-container').innerHTML = html;
