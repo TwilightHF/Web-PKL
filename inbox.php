@@ -278,14 +278,25 @@
                     <tbody>
 
 <?php
-$url = "https://script.google.com/macros/s/AKfycbyXNXBuvTJS3fnnCe-CB0DSdUbQafPGym8y8zeqpFku8WMYg6gbL5it91PwHMVdxvHMKg/exec";
 
-$json = file_get_contents($url);
+$url = "https://script.google.com/macros/s/AKfycbyKV0yj4KajDQbtfHRTAFxu2Hbyd_g99kK4sMMCl9S54BpPkWL8SfpleTfqrxRyVdPToA/exec";
+
+$json = @file_get_contents($url);
+
+if ($json === false) {
+    die("Gagal mengambil data dari Apps Script.");
+}
+
+
 $data = json_decode($json, true);
-
-if (!empty($data['data'])) :
-    foreach ($data['data'] as $row) :
+if(isset($data['data'])):
+    foreach($data['data'] as $row):
+        echo "<pre>";
+print_r($data);
+echo "</pre>";
+exit;
 ?>
+
 
 <tr>
     <td><?= $row['id_task'] ?></td>
@@ -296,33 +307,37 @@ if (!empty($data['data'])) :
     <td><?= $row['sisa_waktu'] ?></td>
 
     <td>
-        <?php
-        $badge = "secondary";
-        if ($row['prioritas'] == "High") $badge = "danger";
-        elseif ($row['prioritas'] == "Medium") $badge = "warning text-dark";
-        elseif ($row['prioritas'] == "Low") $badge = "success";
-        ?>
-        <span class="badge bg-<?= $badge ?>">
+<?php
+$badge = "secondary";
+
+if ($row['prioritas']=="High") $badge="danger";
+elseif($row['prioritas']=="Medium") $badge="warning text-dark";
+elseif($row['prioritas']=="Low") $badge="success";
+?>
+
+<span class="badge bg-<?= $badge ?>">
+    <?= $row['prioritas'] ?>
+</span>
             <?= $row['prioritas'] ?>
         </span>
     </td>
 
     <td>
-        <?php
-        $status = $row['status'];
+      <?php
+$status = $row['status'];
 
-        if ($status == "Open") {
-            $class = "danger";
-        } elseif ($status == "On Progress") {
-            $class = "primary";
-        } elseif ($status == "Waiting") {
-            $class = "warning text-dark";
-        } else {
-            $class = "success";
-        }
-        ?>
-        <span class="badge bg-<?= $class ?>">
-            <?= $status ?>
+$class = "secondary";
+
+if($status=="Open") $class="danger";
+elseif($status=="On Progress") $class="primary";
+elseif($status=="Waiting") $class="warning text-dark";
+elseif($status=="Closed") $class="success";
+?>
+
+<span class="badge bg-<?= $class ?>">
+    <?= $status ?>
+</span>
+            <?= $row['status'] ?>
         </span>
     </td>
 
