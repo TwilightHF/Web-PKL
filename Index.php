@@ -33,41 +33,77 @@
  
                     <h3>Selamat pagi, User</h3>
  
-                    <!-- Summary Cards -->
-                    <div class="row g-3 mt-3">
+                   <!-- Summary Cards -->
+                   <div class="row g-3 mt-3">
+
+                        <?php
+                        // Fungsi untuk mengambil data dari Google Apps Script
+                        function getDashboardData() {
+                            $url = "https://script.google.com/macros/s/AKfycbyXNXBuvTJS3fnnCe-CB0DSdUbQafPGym8y8zeqpFku8WMYg6gbL5it91PwHMVdxvHMKg/exec";
+                            
+                            $json = @file_get_contents($url);
+                            
+                            if ($json === false) {
+                                return [
+                                    'total' => 'Error',
+                                    'open' => 'Error',
+                                    'progress' => 'Error',
+                                    'closed' => 'Error'
+                                ];
+                            }
+
+                            $data = json_decode($json, true);
+                            
+                            return [
+                                'total'    => $data['total'] ?? 0,
+                                'open'     => $data['open'] ?? 0,
+                                'progress' => $data['progress'] ?? 0,
+                                'closed'   => $data['closed'] ?? 0
+                            ];
+                        }
+
+                        $data = getDashboardData();
+                        ?>
+
+                        <!-- Total Task -->
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h6>Total Task</h6>
-                                    <h2>128</h2>
+                                    <h6 class="text-muted">Total Task</h6>
+                                    <h2 class="text-primary"><?= $data['total'] ?></h2>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Open Task -->
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h6>Open Task</h6>
-                                    <h2>24</h2>
+                                    <h6 class="text-muted">Open Task</h6>
+                                    <h2 class="text-danger"><?= $data['open'] ?></h2>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- On Progress -->
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h6>On Progress</h6>
-                                    <h2>56</h2>
+                                    <h6 class="text-muted">On Progress</h6>
+                                    <h2 class="text-warning"><?= $data['progress'] ?></h2>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Closed -->
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h6>Closed</h6>
-                                    <h2>48</h2>
+                                    <h6 class="text-muted">Closed</h6>
+                                    <h2 class="text-success"><?= $data['closed'] ?></h2>
                                 </div>
                             </div>
                         </div>
-                    </div>
  
                     <!-- Priority Alert -->
                     <div class="card shadow-sm mt-4">
