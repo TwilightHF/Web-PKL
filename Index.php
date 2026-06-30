@@ -40,7 +40,6 @@
                         // Fungsi untuk mengambil data dari Google Apps Script
                         function getDashboardData() {
                             $url = "https://script.google.com/macros/s/AKfycbyXNXBuvTJS3fnnCe-CB0DSdUbQafPGym8y8zeqpFku8WMYg6gbL5it91PwHMVdxvHMKg/exec";
-                            
                             $json = @file_get_contents($url);
                             
                             if ($json === false) {
@@ -51,9 +50,7 @@
                                     'closed' => 'Error'
                                 ];
                             }
-
                             $data = json_decode($json, true);
-                            
                             return [
                                 'total'    => $data['total'] ?? 0,
                                 'open'     => $data['open'] ?? 0,
@@ -61,10 +58,9 @@
                                 'closed'   => $data['closed'] ?? 0
                             ];
                         }
-
                         $data = getDashboardData();
                         ?>
-
+                        
                         <!-- Total Task -->
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="card shadow-sm h-100">
