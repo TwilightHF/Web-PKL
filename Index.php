@@ -226,7 +226,7 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="script.js"></script>
         <script>
-            fetch('sidebar.html')
+            fetch('sidebar.php')
                 .then(res => res.text())
                 .then(html => {
                     document.getElementById('sidebar-container').innerHTML = html;
