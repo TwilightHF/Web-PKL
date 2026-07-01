@@ -279,7 +279,7 @@
 
 <?php
 
-$url = "https://script.google.com/macros/s/AKfycbyKV0yj4KajDQbtfHRTAFxu2Hbyd_g99kK4sMMCl9S54BpPkWL8SfpleTfqrxRyVdPToA/exec";
+$url = "https://script.google.com/macros/s/AKfycbwZ7ZUVeR34NGJ58DTsLqS2u8IyC-WQEtaEvnlr5BI5EQa3ODrc3QzuC4_M-MWG9j2YbA/exec";
 
 $json = @file_get_contents($url);
 
@@ -291,10 +291,6 @@ if ($json === false) {
 $data = json_decode($json, true);
 if(isset($data['data'])):
     foreach($data['data'] as $row):
-        echo "<pre>";
-print_r($data);
-echo "</pre>";
-exit;
 ?>
 
 
@@ -315,11 +311,24 @@ elseif($row['prioritas']=="Medium") $badge="warning text-dark";
 elseif($row['prioritas']=="Low") $badge="success";
 ?>
 
+<td>
+<?php
+$badge = "secondary";
+
+if ($row['prioritas'] == "High") {
+    $badge = "danger";
+} elseif ($row['prioritas'] == "Medium") {
+    $badge = "warning";
+} elseif ($row['prioritas'] == "Low") {
+    $badge = "success";
+}
+?>
+
 <span class="badge bg-<?= $badge ?>">
-    <?= $row['prioritas'] ?>
+    <?= htmlspecialchars($row['prioritas']) ?>
 </span>
-            <?= $row['prioritas'] ?>
-        </span>
+</td>
+
     </td>
 
     <td>
@@ -333,12 +342,31 @@ elseif($status=="On Progress") $class="primary";
 elseif($status=="Waiting") $class="warning text-dark";
 elseif($status=="Closed") $class="success";
 ?>
+<td>
+
+<?php
+
+$status = $row['status'] ?? '';
+
+$class = "secondary";
+
+if ($status == "Open") {
+    $class = "danger";
+} elseif ($status == "On Progress") {
+    $class = "primary";
+} elseif ($status == "Waiting") {
+    $class = "warning";
+} elseif ($status == "Closed") {
+    $class = "success";
+}
+
+?>
 
 <span class="badge bg-<?= $class ?>">
-    <?= $status ?>
+    <?= htmlspecialchars($status) ?>
 </span>
-            <?= $row['status'] ?>
-        </span>
+
+</td>
     </td>
 
     <td>
