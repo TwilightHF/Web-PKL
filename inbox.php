@@ -275,110 +275,96 @@
 
                         </thead>
 
-                    <tbody>
+<tbody>
 
 <?php
 
-$url = "https://script.google.com/macros/s/AKfycbwZ7ZUVeR34NGJ58DTsLqS2u8IyC-WQEtaEvnlr5BI5EQa3ODrc3QzuC4_M-MWG9j2YbA/exec";
+$url = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
 
-$json = @file_get_contents($url);
-
-if ($json === false) {
-    die("Gagal mengambil data dari Apps Script.");
-}
-
+$json = file_get_contents($url);
 
 $data = json_decode($json, true);
-if(isset($data['data'])):
-    foreach($data['data'] as $row):
-?>
 
+if(isset($data['data'])){
 
-<tr>
-    <td><?= $row['id_task'] ?></td>
-    <td><?= $row['tipe'] ?></td>
-    <td><?= $row['customer'] ?></td>
-    <td><?= $row['area'] ?></td>
-    <td><?= $row['sla'] ?></td>
-    <td><?= $row['sisa_waktu'] ?></td>
+// Jumlah data per halaman
+$limit = 5;
 
-    <td>
-<?php
-$badge = "secondary";
+// Halaman aktif
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 
-if ($row['prioritas']=="High") $badge="danger";
-elseif($row['prioritas']=="Medium") $badge="warning text-dark";
-elseif($row['prioritas']=="Low") $badge="success";
-?>
-
-<td>
-<?php
-$badge = "secondary";
-
-if ($row['prioritas'] == "High") {
-    $badge = "danger";
-} elseif ($row['prioritas'] == "Medium") {
-    $badge = "warning";
-} elseif ($row['prioritas'] == "Low") {
-    $badge = "success";
-}
-?>
-
-<span class="badge bg-<?= $badge ?>">
-    <?= htmlspecialchars($row['prioritas']) ?>
-</span>
-</td>
-
-    </td>
-
-    <td>
-      <?php
-$status = $row['status'];
-
-$class = "secondary";
-
-if($status=="Open") $class="danger";
-elseif($status=="On Progress") $class="primary";
-elseif($status=="Waiting") $class="warning text-dark";
-elseif($status=="Closed") $class="success";
-?>
-<td>
-
-<?php
-
-$status = $row['status'] ?? '';
-
-$class = "secondary";
-
-if ($status == "Open") {
-    $class = "danger";
-} elseif ($status == "On Progress") {
-    $class = "primary";
-} elseif ($status == "Waiting") {
-    $class = "warning";
-} elseif ($status == "Closed") {
-    $class = "success";
+if($page < 1){
+    $page = 1;
 }
 
-?>
+// Total data
+$totalData = count($data['data']);
 
-<span class="badge bg-<?= $class ?>">
-    <?= htmlspecialchars($status) ?>
-</span>
+// Total halaman
+$totalPage = ceil($totalData / $limit);
 
-</td>
-    </td>
+// Data mulai
+$start = ($page - 1) * $limit;
 
-    <td>
-        <button class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-eye"></i>
-        </button>
-    </td>
-</tr>
+// Ambil hanya 5 data
+$rows = array_slice($data['data'], $start, $limit);
 
-<?php
-    endforeach;
-endif;
+foreach($rows as $row){
+
+        // Badge Prioritas
+        $priorityClass = "secondary";
+
+        if($row['prioritas']=="High"){
+            $priorityClass="danger";
+        }elseif($row['prioritas']=="Medium"){
+            $priorityClass="warning";
+        }elseif($row['prioritas']=="Low"){
+            $priorityClass="success";
+        }
+
+        // Badge Status
+        $statusClass="secondary";
+
+        if($row['status']=="Open"){
+            $statusClass="danger";
+        }elseif($row['status']=="On Progress"){
+            $statusClass="primary";
+        }elseif($row['status']=="Waiting"){
+            $statusClass="warning";
+        }elseif($row['status']=="Closed"){
+            $statusClass="success";
+        }
+
+        echo "<tr>";
+
+        echo "<td>{$row['id_task']}</td>";
+        echo "<td>{$row['tipe']}</td>";
+        echo "<td>{$row['customer']}</td>";
+        echo "<td>{$row['area']}</td>";
+        echo "<td>{$row['sla']}</td>";
+        echo "<td>{$row['sisa_waktu']}</td>";
+
+        echo "<td><span class='badge bg-$priorityClass'>{$row['prioritas']}</span></td>";
+
+        echo "<td><span class='badge bg-$statusClass'>{$row['status']}</span></td>";
+
+        echo "<td>
+                <button class='btn btn-sm btn-outline-primary'>
+                    <i class='bi bi-eye'></i>
+                </button>
+              </td>";
+
+        echo "</tr>";
+    }
+
+}else{
+
+    echo "<tr>";
+    echo "<td colspan='9' class='text-center'>Tidak ada data</td>";
+    echo "</tr>";
+
+}
+
 ?>
 
 </tbody>
@@ -393,45 +379,71 @@ endif;
 
                     <small class="text-muted">
 
-                        Menampilkan 1 - 5 dari 128 Task
+                       <?php
+$from = $start + 1;
+$to = min($start + $limit, $totalData);
+?>
+
+<small class="text-muted">
+Menampilkan <?= $from ?> - <?= $to ?> dari <?= $totalData ?> Task
+</small>
 
                     </small>
 
                     <nav>
 
-                        <ul class="pagination mb-0">
+ <ul class="pagination mb-0">
 
-                            <li class="page-item disabled">
-                                <a class="page-link">
-                                    Previous
-                                </a>
-                            </li>
+<!-- Previous -->
+<li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+    <a class="page-link" href="?page=<?= max(1,$page-1) ?>">
+        Previous
+    </a>
+</li>
 
-                            <li class="page-item active">
-                                <a class="page-link">
-                                    1
-                                </a>
-                            </li>
+<?php
 
-                            <li class="page-item">
-                                <a class="page-link">
-                                    2
-                                </a>
-                            </li>
+$startPage = max(1, $page - 2);
+$endPage   = min($totalPage, $page + 2);
 
-                            <li class="page-item">
-                                <a class="page-link">
-                                    3
-                                </a>
-                            </li>
+if($startPage > 1){
+    echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
 
-                            <li class="page-item">
-                                <a class="page-link">
-                                    Next
-                                </a>
-                            </li>
+    if($startPage > 2){
+        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+}
 
-                        </ul>
+for($i=$startPage; $i<=$endPage; $i++){
+?>
+
+<li class="page-item <?= ($i==$page)?'active':'' ?>">
+    <a class="page-link" href="?page=<?= $i ?>">
+        <?= $i ?>
+    </a>
+</li>
+
+<?php
+}
+
+if($endPage < $totalPage){
+
+    if($endPage < $totalPage-1){
+        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+    echo '<li class="page-item"><a class="page-link" href="?page='.$totalPage.'">'.$totalPage.'</a></li>';
+}
+?>
+
+<!-- Next -->
+<li class="page-item <?= ($page >= $totalPage) ? 'disabled' : '' ?>">
+    <a class="page-link" href="?page=<?= min($totalPage,$page+1) ?>">
+        Next
+    </a>
+</li>
+
+</ul>
 
                     </nav>
 
