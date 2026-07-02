@@ -61,173 +61,137 @@
                 </div>
 
             </div>
+<!-- Card Filter -->
+<div class="card shadow-sm border-0">
 
-            <!-- Card Filter -->
-            <div class="card shadow-sm border-0">
+    <div class="card-body">
 
-                <div class="card-body">
+        <form method="GET">
 
-                    <div class="row g-3 align-items-end">
+            <div class="row g-3 align-items-end">
 
-                        <!-- Search -->
-                        <div class="col-lg-4">
+                <!-- Search -->
+                <div class="col-lg-4">
 
-                            <label class="form-label fw-semibold">
-                                Search
-                            </label>
+                    <label class="form-label fw-semibold">
+                        Search
+                    </label>
 
-                            <div class="input-group">
+                    <div class="input-group">
 
-                                <span class="input-group-text bg-white">
-                                    <i class="bi bi-search"></i>
-                                </span>
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
 
-                                <input
-                                    type="text"
-                                    id="searchInput"
-                                    class="form-control"
-                                    placeholder="Cari ID Task atau Customer">
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Cari ID Task atau Customer"
+                            value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
 
-                            </div>
-
-                        </div>
-
-                        <!-- Status -->
-                        <div class="col-lg-2">
-
-                            <label class="form-label fw-semibold">
-                                Status
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua Status
-                                </option>
-
-                                <option>
-                                    Open
-                                </option>
-
-                                <option>
-                                    On Progress
-                                </option>
-
-                                <option>
-                                    Waiting
-                                </option>
-
-                                <option>
-                                    Closed
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- Tipe -->
-                        <div class="col-lg-2">
-
-                            <label class="form-label fw-semibold">
-                                Tipe
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua Tipe
-                                </option>
-
-                                <option>
-                                    Incident
-                                </option>
-
-                                <option>
-                                    Request
-                                </option>
-
-                                <option>
-                                    Maintenance
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- Prioritas -->
-                        <div class="col-lg-2">
-
-                            <label class="form-label fw-semibold">
-                                Prioritas
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua Prioritas
-                                </option>
-
-                                <option>
-                                    High
-                                </option>
-
-                                <option>
-                                    Medium
-                                </option>
-
-                                <option>
-                                    Low
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- SLA -->
-                        <div class="col-lg-1">
-
-                            <label class="form-label fw-semibold">
-                                SLA
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua
-                                </option>
-
-                                <option>
-                                    Dalam SLA
-                                </option>
-
-                                <option>
-                                    Lewat SLA
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- Filter -->
-                        <div class="col-lg-1 d-grid">
-
-                            <button class="btn btn-primary">
-
-                                <i class="bi bi-funnel"></i>
-
-                                Filter
-
-                            </button>
-
-                        </div>
+                        <button class="btn btn-primary" type="submit">
+                            Cari
+                        </button>
 
                     </div>
 
                 </div>
 
+                <!-- Status -->
+                <div class="col-lg-2">
+
+                    <label class="form-label fw-semibold">
+                        Status
+                    </label>
+
+                    <select class="form-select" name="status">
+
+                        <option value="">Semua Status</option>
+                        <option value="Open">Open</option>
+                        <option value="On Progress">On Progress</option>
+                        <option value="Waiting">Waiting</option>
+                        <option value="Closed">Closed</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Tipe -->
+                <div class="col-lg-2">
+
+                    <label class="form-label fw-semibold">
+                        Tipe
+                    </label>
+
+                    <select class="form-select" name="tipe">
+
+                        <option value="">Semua Tipe</option>
+                        <option value="Incident">Incident</option>
+                        <option value="Request">Request</option>
+                        <option value="Maintenance">Maintenance</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Prioritas -->
+                <div class="col-lg-2">
+
+                    <label class="form-label fw-semibold">
+                        Prioritas
+                    </label>
+
+                    <select class="form-select" name="prioritas">
+
+                        <option value="">Semua Prioritas</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+
+                    </select>
+
+                </div>
+
+                <!-- SLA -->
+                <div class="col-lg-1">
+
+                    <label class="form-label fw-semibold">
+                        SLA
+                    </label>
+
+                    <select class="form-select" name="sla">
+
+                        <option value="">Semua</option>
+                        <option value="Dalam SLA">Dalam SLA</option>
+                        <option value="Lewat SLA">Lewat SLA</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Tombol Filter -->
+                <div class="col-lg-1 d-grid">
+
+                    <button class="btn btn-primary" type="submit">
+
+                        <i class="bi bi-funnel"></i>
+
+                        Filter
+
+                    </button>
+
+                </div>
+
             </div>
 
-            <br>
+        </form>
+
+    </div>
+
+</div>
+
+<br>
 
         <!-- Card Table -->
         <div class="card shadow-sm border-0">
@@ -278,8 +242,15 @@
 <tbody>
 
 <?php
+// Ambil keyword dari form search
+$search = $_GET['search'] ?? "";
+
 $url = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
 
+if($search != ""){
+    $url .= "?search=" . urlencode($search);
+}
+// Ambil data
 $json = file_get_contents($url);
 
 $data = json_decode($json, true);
