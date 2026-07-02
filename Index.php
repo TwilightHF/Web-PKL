@@ -1,3 +1,7 @@
+<?php
+require_once 'auth.php';
+?>
+
 <!doctype html>
 <html lang="en" data-bs-theme="light">
     <head>
@@ -22,16 +26,30 @@
                 <nav class="navbar bg-white shadow-sm px-4">
                     <span class="navbar-brand">Summary</span>
                     <div class="ms-auto d-flex align-items-center">
-                        <i class="bi bi-bell fs-5 me-4"></i>
-                        <img src="https://i.pravatar.cc/40" class="rounded-circle me-2">
-                        <span>Andy Pratama</span>
+                    <i class="bi bi-bell fs-5 me-4"></i>
+
+                    <img src="https://i.pravatar.cc/40" class="rounded-circle me-2">
+
+                    <div class="me-3">
+                        <div class="fw-semibold"><?= htmlspecialchars($_SESSION['nama']) ?></div>
+                        <small class="text-muted"><?= htmlspecialchars($_SESSION['role']) ?></small>
                     </div>
-                </nav>
+
+                    <a href="logout.php"
+                    class="btn btn-outline-danger btn-sm"
+                    onclick="return confirm('Yakin ingin logout?')">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+
+                </div>
  
                 <!-- Main Content -->
                 <div class="container-fluid p-4">
  
-                    <h3>Selamat pagi, User</h3>
+                    <h3>
+                        Selamat pagi, <?= htmlspecialchars($_SESSION['nama']) ?><br>
+                        <small><?= htmlspecialchars($_SESSION['role']) ?></small>
+                    </h3>
  
                    <!-- Summary Cards -->
                    <div class="row g-3 mt-3">
