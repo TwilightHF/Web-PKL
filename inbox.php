@@ -278,27 +278,51 @@
 <tbody>
 
 <?php
-
 $url = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
 
 $json = file_get_contents($url);
 
 $data = json_decode($json, true);
 
-if(isset($data['data'])){
+// =======================
+// Detail Task
+// =======================
+$detail = null;
 
-// Jumlah data per halaman
-$limit = 5;
+if(isset($_GET['id'])){
 
-// Halaman aktif
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $id = $_GET['id'];
 
-if($page < 1){
-    $page = 1;
+    foreach($data['tasks'] as $task){
+
+        if($task['id'] == $id){
+
+            $detail = $task;
+            break;
+
+        }
+
+    }
+
 }
 
+// =======================
+// Daftar Task
+// =======================
+if(isset($data['tasks'])){
+
+    // Jumlah data per halaman
+    $limit = 5;
+
+    // Halaman aktif
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+    if($page < 1){
+        $page = 1;
+    }
+
 // Total data
-$totalData = count($data['data']);
+$totalData = count($data['tasks']);
 
 // Total halaman
 $totalPage = ceil($totalData / $limit);
@@ -307,7 +331,7 @@ $totalPage = ceil($totalData / $limit);
 $start = ($page - 1) * $limit;
 
 // Ambil hanya 5 data
-$rows = array_slice($data['data'], $start, $limit);
+$rows = array_slice($data['tasks'], $start, $limit);
 
 foreach($rows as $row){
 
@@ -337,7 +361,7 @@ foreach($rows as $row){
 
         echo "<tr>";
 
-        echo "<td>{$row['id_task']}</td>";
+        echo "<td>{$row['id']}</td>";
         echo "<td>{$row['tipe']}</td>";
         echo "<td>{$row['customer']}</td>";
         echo "<td>{$row['area']}</td>";
@@ -348,13 +372,11 @@ foreach($rows as $row){
 
         echo "<td><span class='badge bg-$statusClass'>{$row['status']}</span></td>";
 
-        echo "<td>
-                <button class='btn btn-sm btn-outline-primary'>
-                    <i class='bi bi-eye'></i>
-                </button>
-              </td>";
-
-        echo "</tr>";
+   echo "<td>
+        <a href='inbox.php?id=".urlencode($row['id'])."' class='btn btn-sm btn-outline-primary'>
+            <i class='bi bi-eye'></i>
+        </a>
+      </td>";
     }
 
 }else{
@@ -380,8 +402,8 @@ foreach($rows as $row){
                     <small class="text-muted">
 
                        <?php
-$from = $start + 1;
-$to = min($start + $limit, $totalData);
+$from = ($totalData > 0) ? $start + 1 : 0;
+$to = ($totalData > 0) ? min($start + $limit, $totalData) : 0;
 ?>
 
 <small class="text-muted">
@@ -479,57 +501,42 @@ if($endPage < $totalPage){
 
                             <tr>
                                 <th width="35%">ID Task</th>
-                                <td>: TK-001</td>
+                               <td>: <?= $detail['id'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Tipe</th>
-                                <td>: Incident</td>
+                             <td>: <?= $detail['tipe'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Customer</th>
-                                <td>: PT ABC</td>
+                                <td>: <?= $detail['customer'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Area</th>
-                                <td>: Jakarta</td>
+                                <td>: <?= $detail['area'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Prioritas</th>
-                                <td>
-                                    :
-                                    <span class="badge bg-danger">
-                                        High
-                                    </span>
-                                </td>
+                              <td>: <?= $detail['prioritas'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Status</th>
-                                <td>
-                                    :
-                                    <span class="badge bg-danger">
-                                        Open
-                                    </span>
-                                </td>
+                             <td>: <?= $detail['status'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>SLA</th>
-                                <td>: 4 Jam</td>
+                                <td>: <?= $detail['sla'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Sisa Waktu</th>
-                                <td>
-                                    :
-                                    <span class="text-danger fw-bold">
-                                        00:45:10
-                                    </span>
-                                </td>
+                                <td>: <?= $detail['sisa_waktu'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
