@@ -55,28 +55,67 @@ require_once 'auth.php';
                    <div class="row g-3 mt-3">
 
                         <?php
-                        // Fungsi untuk mengambil data dari Google Apps Script
-                        function getDashboardData() {
-                            $url = "https://script.google.com/macros/s/AKfycbyXNXBuvTJS3fnnCe-CB0DSdUbQafPGym8y8zeqpFku8WMYg6gbL5it91PwHMVdxvHMKg/exec";
-                            $json = @file_get_contents($url);
-                            
-                            if ($json === false) {
-                                return [
-                                    'total' => 'Error',
-                                    'open' => 'Error',
-                                    'progress' => 'Error',
-                                    'closed' => 'Error'
-                                ];
+                        $api = "https://script.google.com/macros/s/AKfycbynNmRaZaE60vlYXShe8LURR2ipoC-LXs-IrCHpg7bBnfiyPu97Xz0GU5wBZLoEBRxKcg/exec";
+
+                        $json = @file_get_contents($api);
+
+                        $response = [];
+                        $data = [];
+
+                        $total = 0;
+                        $open = 0;
+                        $issue = 0;
+                        $closed = 0;
+
+                        $statusChart = [];
+                        $areaChart = [];
+
+                        if ($json !== false) {
+
+                            $response = json_decode($json, true);
+
+                            if (is_array($response) && isset($response["tasks"])) {
+
+                                $data = $response["tasks"];
+
+                                $data = $response["tasks"];
+
+                                $total  = $response["total"]  ?? 0;
+                                $open   = $response["open"]   ?? 0;
+                                $issue  = $response["progress"] ?? 0;
+                                $closed = $response["closed"] ?? 0;
+
+                                $statusChart = $response["task_by_status"] ?? [];
+                                $areaChart   = $response["task_by_area"] ?? [];
+
+                                foreach ($data as $task) {
+                                    $label = trim($task["status"] ?? "");
+
+                                    if ($label == "") {
+                                        $label = "Unknown";
+                                    }
+
+                                    if (!isset($statusChart[$label])) {
+                                        $statusChart[$label] = 0;
+                                    }
+
+                                    $statusChart[$label]++;
+
+                                    $area = trim($task["area"] ?? "");
+
+                                    if ($area == "") {
+                                        $area = "Unknown";
+                                    }
+
+                                    if (!isset($areaChart[$area])) {
+                                        $areaChart[$area] = 0;
+                                    }
+
+                                    $areaChart[$area]++;
+                                }
                             }
-                            $data = json_decode($json, true);
-                            return [
-                                'total'    => $data['total'] ?? 0,
-                                'open'     => $data['open'] ?? 0,
-                                'progress' => $data['progress'] ?? 0,
-                                'closed'   => $data['closed'] ?? 0
-                            ];
                         }
-                        $data = getDashboardData();
+
                         ?>
                         
                         <!-- Total Task -->
@@ -84,7 +123,7 @@ require_once 'auth.php';
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
                                     <h6 class="text-muted">Total Task</h6>
-                                    <h2 class="text-primary"><?= $data['total'] ?></h2>
+                                    <h2 class="text-primary"><?= $total ?></h2>
                                 </div>
                             </div>
                         </div>
@@ -94,7 +133,7 @@ require_once 'auth.php';
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
                                     <h6 class="text-muted">Open Task</h6>
-                                    <h2 class="text-danger"><?= $data['open'] ?></h2>
+                                    <h2 class="text-danger"><?= $open ?></h2>
                                 </div>
                             </div>
                         </div>
@@ -103,8 +142,8 @@ require_once 'auth.php';
                         <div class="col-12 col-sm-6 col-lg-3">
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
-                                    <h6 class="text-muted">On Progress</h6>
-                                    <h2 class="text-warning"><?= $data['progress'] ?></h2>
+                                    <h6 class="text-muted">Issue</h6>
+                                    <h2 class="text-warning"><?= $issue ?></h2>
                                 </div>
                             </div>
                         </div>
@@ -114,7 +153,7 @@ require_once 'auth.php';
                             <div class="card shadow-sm h-100">
                                 <div class="card-body">
                                     <h6 class="text-muted">Closed</h6>
-                                    <h2 class="text-success"><?= $data['closed'] ?></h2>
+                                    <h2 class="text-success"><?= $closed ?></h2>
                                 </div>
                             </div>
                         </div>
@@ -137,20 +176,39 @@ require_once 'auth.php';
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>T-1245</td>
-                                            <td>Gangguan</td>
-                                            <td>PT ABC</td>
-                                            <td>JKT</td>
-                                            <td><span class="badge bg-danger">OPEN</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>T-1248</td>
-                                            <td>Instalasi</td>
-                                            <td>CV Sukses</td>
-                                            <td>BKS</td>
-                                            <td><span class="badge bg-success">CLOSED</span></td>
-                                        </tr>
+                                    <?php
+                                    $count = 0;
+                                    foreach($data as $task){
+                                        if (!isset($task['prioritas'])) continue;
+                                        $badge = "secondary";
+                                        switch(strtolower($task['status'])){
+                                            case "open":
+                                                $badge="danger";
+                                                break;
+                                            case "issue":
+                                                $badge="warning";
+                                                break;
+                                            case "closed":
+                                                $badge="success";
+                                                break;
+                                        }
+                                    ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($task['id']) ?></td>
+                                        <td><?= htmlspecialchars($task['prioritas']) ?></td>
+                                        <td><?= htmlspecialchars($task['customer']) ?></td>
+                                        <td><?= htmlspecialchars($task['area']) ?></td>
+                                        <td><span class="badge bg-<?= $badge ?>">
+                                             <?= htmlspecialchars($task['status']) ?>
+                                        </span>
+                                    </td>
+                                    </tr>
+
+                                    <?php
+                                    $count++;
+                                    if($count>=10) break;
+                                    }
+                                    ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -186,32 +244,29 @@ require_once 'auth.php';
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
                                 <tbody>
+                                    <?php
+                                    $recent = $response["recent_activity"] ?? [];
+                                    $count = 0;
+                                    foreach($recent as $task){
+                                    ?>
+
                                     <tr>
-                                        <td width="80">10:12</td>
-                                        <td>Task T-1245 assigned to Andi Pratama</td>
-                                        <td class="text-end"><span class="badge bg-primary">NEW</span></td>
+                                        <td><?= $count+1 ?></td>
+                                        <td><?= htmlspecialchars($task['customer']) ?></td>
+                                        <td class="text-end">
+                                        <span class="badge bg-info">
+                                            <?= htmlspecialchars($task['status']) ?>
+                                        </span>
+                                        </td>
                                     </tr>
-                                    <tr>
-                                        <td>09:55</td>
-                                        <td>Task T-1239 closed by Andi Pratama</td>
-                                        <td class="text-end"><span class="badge bg-success">CLOSED</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>09:30</td>
-                                        <td>New task T-1250 created from BOT Telegram</td>
-                                        <td class="text-end"><span class="badge bg-primary">NEW</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>09:12</td>
-                                        <td>Task T-1242 status changed to On Progress</td>
-                                        <td class="text-end"><span class="badge bg-info">UPDATE</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>08:45</td>
-                                        <td>Task T-1238 closed by Budi Santoso</td>
-                                        <td class="text-end"><span class="badge bg-success">CLOSED</span></td>
-                                    </tr>
-                                </tbody>
+
+                                    <?php
+                                    $count++;
+                                    if($count>=8) break;
+                                    }
+                                    ?>
+
+                                    </tbody>
                             </table>
                         </div>
                     </div>
@@ -234,10 +289,20 @@ require_once 'auth.php';
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-            crossorigin="anonymous"
-        ></script>
+            crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+        window.dashboardData = {
+            total: <?= $total ?>,
+            open: <?= $open ?>,
+            issue: <?= $issue ?>,
+            closed: <?= $closed ?>,
+            task_by_status: <?= json_encode($statusChart) ?>,
+            task_by_area: <?= json_encode($areaChart) ?>
+        };
+
+        </script>
         <script src="script.js"></script>
         <script>
             fetch('sidebar.php')
