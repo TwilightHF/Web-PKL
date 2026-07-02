@@ -6,21 +6,50 @@ if (isset($_SESSION['username'])) {
     exit;
 }
 
-$error = '';
+$error = "";
 
 if (isset($_POST['login'])) {
+
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    // Login sederhana sementara
-    if ($username === 'admin' && $password === 'admin123') {
-        $_SESSION['username'] = 'admin';
-        $_SESSION['nama'] = 'Andy Pratama';
-        header("Location: index.php");
-        exit;
-    } else {
-        $error = "Username atau Password salah!";
+    $url = "https://script.google.com/macros/s/AKfycbwYIkZB84QURA54m4IqhmKsRhm5Uq6v4NZykrrRRqAmU2TsvsPhSbE4Ixem1subUyUQqQ/exec";
+
+    $postData = http_build_query([
+        "username" => $username,
+        "password" => $password
+    ]);
+
+    $options = [
+        "http" => [
+            "header"  => "Content-Type: application/x-www-form-urlencoded",
+            "method"  => "POST",
+            "content" => $postData,
+            "timeout" => 30
+        ]
+    ];
+
+    $context = stream_context_create($options);
+    $response = @file_get_contents($url, false, $context);
+
+    if ($response !== false) {
+
+        $result = json_decode($response, true);
+
+        if (!empty($result['success'])) {
+
+            $_SESSION['username'] = $result['username'];
+            $_SESSION['email']    = $result['email'];
+            $_SESSION['nama']     = $result['nama'];
+            $_SESSION['loker']    = $result['loker'];
+            $_SESSION['role']     = $result['role'];
+
+            header("Location: index.php");
+            exit;
+        }
     }
+
+    $error = "Username atau Password salah.";
 }
 ?>
 
