@@ -29,28 +29,47 @@ require_once 'auth.php';
 
             <div class="content">
 
-                <nav class="navbar bg-white shadow-sm px-4">
+            <!-- Navbar -->
+            <nav class="navbar bg-white shadow-sm px-4 py-3">
+            <div class="container-fluid">
+                
+                <!-- Brand / Page Title -->
+                <span class="navbar-brand fw-bold fs-4 text-dark">
+                    Summary
+                </span>
 
-            <span class="navbar-brand fw-semibold">
-                Inbox Task
-            </span>
-            <div class="ms-auto d-flex align-items-center">
-                <i class="bi bi-bell fs-5 me-4"></i>
+                <!-- Right Side -->
+                <div class="ms-auto d-flex align-items-center gap-3">
 
-                    <img src="https://i.pravatar.cc/40" class="rounded-circle me-2">
+                    <!-- Notification -->
+                    <i class="bi bi-bell fs-5 text-muted" style="cursor: pointer;"></i>
 
-                    <div class="me-3">
-                        <div class="fw-semibold"><?= htmlspecialchars($_SESSION['nama']) ?></div>
-                        <small class="text-muted"><?= htmlspecialchars($_SESSION['role']) ?></small>
+                    <!-- Profile -->
+                    <div class="d-flex align-items-center gap-2">
+                        <img 
+                            src="https://i.pravatar.cc/40" 
+                            alt="Profile" 
+                            class="rounded-circle" 
+                            width="38" 
+                            height="38">
+
+                        <div>
+                            <div class="fw-semibold"><?= htmlspecialchars($_SESSION['nama']) ?></div>
+                            <small class="text-muted"><?= htmlspecialchars($_SESSION['role']) ?></small>
+                        </div>
                     </div>
 
-                    <a href="logout.php"
-                    class="btn btn-outline-danger btn-sm"
+                    <!-- Logout -->
+                    <a href="logout.php" 
+                    class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
                     onclick="return confirm('Yakin ingin logout?')">
-                        <i class="bi bi-box-arrow-right"></i> Logout
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
                     </a>
 
                 </div>
+            </div>
+        </nav>
 
         <!-- paste kode temanmu di sini -->
         <div class="container-fluid p-4">
@@ -75,173 +94,137 @@ require_once 'auth.php';
                 </div>
 
             </div>
+<!-- Card Filter -->
+<div class="card shadow-sm border-0">
 
-            <!-- Card Filter -->
-            <div class="card shadow-sm border-0">
+    <div class="card-body">
 
-                <div class="card-body">
+        <form method="GET">
 
-                    <div class="row g-3 align-items-end">
+            <div class="row g-3 align-items-end">
 
-                        <!-- Search -->
-                        <div class="col-lg-4">
+                <!-- Search -->
+                <div class="col-lg-4">
 
-                            <label class="form-label fw-semibold">
-                                Search
-                            </label>
+                    <label class="form-label fw-semibold">
+                        Search
+                    </label>
 
-                            <div class="input-group">
+                    <div class="input-group">
 
-                                <span class="input-group-text bg-white">
-                                    <i class="bi bi-search"></i>
-                                </span>
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
 
-                                <input
-                                    type="text"
-                                    id="searchInput"
-                                    class="form-control"
-                                    placeholder="Cari ID Task atau Customer">
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Cari ID Task atau Customer"
+                            value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
 
-                            </div>
-
-                        </div>
-
-                        <!-- Status -->
-                        <div class="col-lg-2">
-
-                            <label class="form-label fw-semibold">
-                                Status
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua Status
-                                </option>
-
-                                <option>
-                                    Open
-                                </option>
-
-                                <option>
-                                    On Progress
-                                </option>
-
-                                <option>
-                                    Waiting
-                                </option>
-
-                                <option>
-                                    Closed
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- Tipe -->
-                        <div class="col-lg-2">
-
-                            <label class="form-label fw-semibold">
-                                Tipe
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua Tipe
-                                </option>
-
-                                <option>
-                                    Incident
-                                </option>
-
-                                <option>
-                                    Request
-                                </option>
-
-                                <option>
-                                    Maintenance
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- Prioritas -->
-                        <div class="col-lg-2">
-
-                            <label class="form-label fw-semibold">
-                                Prioritas
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua Prioritas
-                                </option>
-
-                                <option>
-                                    High
-                                </option>
-
-                                <option>
-                                    Medium
-                                </option>
-
-                                <option>
-                                    Low
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- SLA -->
-                        <div class="col-lg-1">
-
-                            <label class="form-label fw-semibold">
-                                SLA
-                            </label>
-
-                            <select class="form-select">
-
-                                <option selected>
-                                    Semua
-                                </option>
-
-                                <option>
-                                    Dalam SLA
-                                </option>
-
-                                <option>
-                                    Lewat SLA
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        <!-- Filter -->
-                        <div class="col-lg-1 d-grid">
-
-                            <button class="btn btn-primary">
-
-                                <i class="bi bi-funnel"></i>
-
-                                Filter
-
-                            </button>
-
-                        </div>
+                        <button class="btn btn-primary" type="submit">
+                            Cari
+                        </button>
 
                     </div>
 
                 </div>
 
+                <!-- Status -->
+                <div class="col-lg-2">
+
+                    <label class="form-label fw-semibold">
+                        Status
+                    </label>
+
+                    <select class="form-select" name="status">
+
+                        <option value="">Semua Status</option>
+                        <option value="Open">Open</option>
+                        <option value="On Progress">On Progress</option>
+                        <option value="Waiting">Waiting</option>
+                        <option value="Closed">Closed</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Tipe -->
+                <div class="col-lg-2">
+
+                    <label class="form-label fw-semibold">
+                        Tipe
+                    </label>
+
+                    <select class="form-select" name="tipe">
+
+                        <option value="">Semua Tipe</option>
+                        <option value="Incident">Incident</option>
+                        <option value="Request">Request</option>
+                        <option value="Maintenance">Maintenance</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Prioritas -->
+                <div class="col-lg-2">
+
+                    <label class="form-label fw-semibold">
+                        Prioritas
+                    </label>
+
+                    <select class="form-select" name="prioritas">
+
+                        <option value="">Semua Prioritas</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+
+                    </select>
+
+                </div>
+
+                <!-- SLA -->
+                <div class="col-lg-1">
+
+                    <label class="form-label fw-semibold">
+                        SLA
+                    </label>
+
+                    <select class="form-select" name="sla">
+
+                        <option value="">Semua</option>
+                        <option value="Dalam SLA">Dalam SLA</option>
+                        <option value="Lewat SLA">Lewat SLA</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Tombol Filter -->
+                <div class="col-lg-1 d-grid">
+
+                    <button class="btn btn-primary" type="submit">
+
+                        <i class="bi bi-funnel"></i>
+
+                        Filter
+
+                    </button>
+
+                </div>
+
             </div>
 
-            <br>
+        </form>
+
+    </div>
+
+</div>
+
+<br>
 
         <!-- Card Table -->
         <div class="card shadow-sm border-0">
@@ -289,152 +272,148 @@ require_once 'auth.php';
 
                         </thead>
 
-<?php
-// =========================================================
-// AMBIL DATA DARI GOOGLE APPS SCRIPT (pakai cURL, bukan file_get_contents)
-// Dengan cache lokal: kalau request ke Google gagal/timeout,
-// halaman tetap tampil pakai data terakhir yang berhasil diambil.
-// =========================================================
-$url       = "https://script.google.com/macros/s/AKfycbyvFfCD6V-DuaKkypPH9OWL21BuTG8kq3wGWh8fSmZdVrCikpcvjOax1gS1vDBLe_Bvbw/exec";
-$cacheFile = __DIR__ . "/cache_tasks.json";
-$cacheMaxAge = 300; // detik, boleh diubah sesuai kebutuhan
-
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // penting! Apps Script sering redirect
-curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);    // gagal connect cepat, jangan nunggu lama
-curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // hanya kalau memang ada masalah SSL di XAMPP lokal
-
-$json      = curl_exec($ch);
-$curlError = curl_error($ch);
-curl_close($ch);
-
-$data      = json_decode($json, true);
-$fromCache = false;
-
-if ($json === false || !isset($data['tasks'])) {
-    // request gagal atau struktur tidak sesuai -> coba pakai cache lama
-    if (file_exists($cacheFile)) {
-        $cached = json_decode(file_get_contents($cacheFile), true);
-        if (isset($cached['tasks'])) {
-            $data      = $cached;
-            $fromCache = true;
-        }
-    }
-} else {
-    // request sukses -> simpan sebagai cache untuk request berikutnya
-    file_put_contents($cacheFile, $json);
-}
-
-// Variabel pagination didefinisikan DI LUAR blok if,
-// supaya tidak pernah "undefined" walau data gagal diambil
-$limit = 5;
-$page  = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-if ($page < 1) $page = 1;
-
-$rows      = [];
-$totalData = 0;
-$totalPage = 1;
-$start     = 0;
-
-if (isset($data['tasks'])) {
-    // key yang benar adalah 'tasks', bukan 'data'
-    // dicek dari $data, bukan $json, supaya data hasil cache tetap terpakai
-
-    $totalData = count($data['tasks']);
-    $totalPage = max(1, ceil($totalData / $limit));
-    $start     = ($page - 1) * $limit;
-    $rows      = array_slice($data['tasks'], $start, $limit);
-}
-?>
-
 <tbody>
-<?php
-if (count($rows) > 0) {
 
-    foreach ($rows as $row) {
+<?php
+// Ambil keyword dari form search
+$search = $_GET['search'] ?? "";
+
+$url = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
+
+if($search != ""){
+    $url .= "?search=" . urlencode($search);
+}
+// Ambil data
+$json = file_get_contents($url);
+
+$data = json_decode($json, true);
+
+// =======================
+// Detail Task
+// =======================
+$detail = null;
+
+if(isset($_GET['id'])){
+
+    $id = $_GET['id'];
+
+    foreach($data['tasks'] as $task){
+
+        if($task['id'] == $id){
+
+            $detail = $task;
+            break;
+
+        }
+
+    }
+
+}
+
+// =======================
+// Daftar Task
+// =======================
+if(isset($data['tasks'])){
+
+    // Jumlah data per halaman
+    $limit = 5;
+
+    // Halaman aktif
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+    if($page < 1){
+        $page = 1;
+    }
+
+// Total data
+$totalData = count($data['tasks']);
+
+// Total halaman
+$totalPage = ceil($totalData / $limit);
+
+// Data mulai
+$start = ($page - 1) * $limit;
+
+// Ambil hanya 5 data
+$rows = array_slice($data['tasks'], $start, $limit);
+
+foreach($rows as $row){
 
         // Badge Prioritas
         $priorityClass = "secondary";
-        if ($row['prioritas'] == "High") {
-            $priorityClass = "danger";
-        } elseif ($row['prioritas'] == "Medium") {
-            $priorityClass = "warning";
-        } elseif ($row['prioritas'] == "Low") {
-            $priorityClass = "success";
+
+        if($row['prioritas']=="High"){
+            $priorityClass="danger";
+        }elseif($row['prioritas']=="Medium"){
+            $priorityClass="warning";
+        }elseif($row['prioritas']=="Low"){
+            $priorityClass="success";
         }
 
         // Badge Status
-        $statusClass = "secondary";
-        if ($row['status'] == "Open") {
-            $statusClass = "danger";
-        } elseif ($row['status'] == "On Progress") {
-            $statusClass = "primary";
-        } elseif ($row['status'] == "Waiting") {
-            $statusClass = "warning";
-        } elseif ($row['status'] == "Closed") {
-            $statusClass = "success";
+        $statusClass="secondary";
+
+        if($row['status']=="Open"){
+            $statusClass="danger";
+        }elseif($row['status']=="On Progress"){
+            $statusClass="primary";
+        }elseif($row['status']=="Waiting"){
+            $statusClass="warning";
+        }elseif($row['status']=="Closed"){
+            $statusClass="success";
         }
 
         echo "<tr>";
-        // 'id' bukan 'id_task' -> sesuai field dari Apps Script
-        echo "<td>" . htmlspecialchars($row['id'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($row['tipe'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($row['customer'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($row['area'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($row['sla'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($row['sisa_waktu'] ?? '-') . "</td>";
-        echo "<td><span class='badge bg-{$priorityClass}'>" . htmlspecialchars($row['prioritas'] ?? '-') . "</span></td>";
-        echo "<td><span class='badge bg-{$statusClass}'>" . htmlspecialchars($row['status'] ?? '-') . "</span></td>";
-        echo "<td>
-                <button class='btn btn-sm btn-outline-primary'>
-                    <i class='bi bi-eye'></i>
-                </button>
-              </td>";
-        echo "</tr>";
+
+        echo "<td>{$row['id']}</td>";
+        echo "<td>{$row['tipe']}</td>";
+        echo "<td>{$row['customer']}</td>";
+        echo "<td>{$row['area']}</td>";
+        echo "<td>{$row['sla']}</td>";
+        echo "<td>{$row['sisa_waktu']}</td>";
+
+        echo "<td><span class='badge bg-$priorityClass'>{$row['prioritas']}</span></td>";
+
+        echo "<td><span class='badge bg-$statusClass'>{$row['status']}</span></td>";
+
+   echo "<td>
+        <a href='inbox.php?id=".urlencode($row['id'])."' class='btn btn-sm btn-outline-primary'>
+            <i class='bi bi-eye'></i>
+        </a>
+      </td>";
     }
 
-} else {
-    echo "<tr><td colspan='9' class='text-center'>Tidak ada data</td></tr>";
+}else{
+
+    echo "<tr>";
+    echo "<td colspan='9' class='text-center'>Tidak ada data</td>";
+    echo "</tr>";
+
 }
+
 ?>
+
 </tbody>
 
                     </table>
 
                 </div>
 
-                <?php if ($fromCache): ?>
-                    <div class="alert alert-warning mt-3 mb-0">
-                        Tidak bisa terhubung ke server saat ini, menampilkan data cache terakhir
-                        (<?= file_exists($cacheFile) ? date("d M Y H:i:s", filemtime($cacheFile)) : '-' ?>).
-                    </div>
-                <?php elseif (!isset($data['tasks'])): ?>
-                    <div class="alert alert-danger mt-3 mb-0">
-                        <?php if ($curlError): ?>
-                            Gagal mengambil data dari server: <?= htmlspecialchars($curlError) ?>
-                        <?php elseif ($json === false): ?>
-                            Gagal menghubungi Google Apps Script.
-                        <?php elseif (json_last_error() !== JSON_ERROR_NONE): ?>
-                            Response bukan JSON valid: <?= htmlspecialchars(json_last_error_msg()) ?>
-                        <?php else: ?>
-                            Struktur data dari server tidak sesuai (field 'tasks' tidak ditemukan).
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
                 <!-- Pagination -->
 
                 <div class="d-flex justify-content-between align-items-center mt-3">
 
                     <small class="text-muted">
-                        <?php
-                        $from = $totalData > 0 ? $start + 1 : 0;
-                        $to   = min($start + $limit, $totalData);
-                        ?>
-                        Menampilkan <?= $from ?> - <?= $to ?> dari <?= $totalData ?> Task
+
+                       <?php
+$from = ($totalData > 0) ? $start + 1 : 0;
+$to = ($totalData > 0) ? min($start + $limit, $totalData) : 0;
+?>
+
+<small class="text-muted">
+Menampilkan <?= $from ?> - <?= $to ?> dari <?= $totalData ?> Task
+</small>
+
                     </small>
 
                     <nav>
@@ -526,56 +505,42 @@ if($endPage < $totalPage){
 
                             <tr>
                                 <th width="35%">ID Task</th>
-                                <td>: TK-001</td>
+                               <td>: <?= $detail['id'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Tipe</th>
-                                <td>: Incident</td>
+                             <td>: <?= $detail['tipe'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Customer</th>
-                                <td>: PT ABC</td>
+                                <td>: <?= $detail['customer'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Area</th>
-                                <td>: Jakarta</td>
+                                <td>: <?= $detail['area'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Prioritas</th>
-                                <td>
-                                    :
-                                    <span class="badge bg-danger">
-                                        High
-                                    </span>
-                                </td>
+                              <td>: <?= $detail['prioritas'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Status</th>
-                                <td>
-                                    :
-                                    <span class="badge bg-danger">
-                                        Open
-                                    </span>
-                                </td>
+                             <td>: <?= $detail['status'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>SLA</th>
-                                <td>: 4 Jam</td>
+                                <td>: <?= $detail['sla'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
                                 <th>Sisa Waktu</th>
-                                <td>
-                                    <span class="text-danger fw-bold">
-                                        -
-                                    </span>
-                                </td>
+                                <td>: <?= $detail['sisa_waktu'] ?? '-' ?></td>
                             </tr>
 
                             <tr>
@@ -681,7 +646,7 @@ if($endPage < $totalPage){
 
 </div>
         <script>
-            fetch('sidebar.php')
+            fetch('sidebar.html')
                 .then(res => res.text())
                 .then(html => {
                     document.getElementById('sidebar-container').innerHTML = html;
