@@ -100,10 +100,6 @@ if (isset($_POST['login'])) {
                     LOGIN
                 </button>
             </form>
-
-            <div class="text-center mt-3">
-                <small class="text-light">Default: admin / admin123</small>
-            </div>
         </div>
     </div>
 </div>
