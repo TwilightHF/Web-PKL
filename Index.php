@@ -175,24 +175,57 @@ require_once 'auth.php';
                                             <th>Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                    <?php
-                                    $count = 0;
-                                    foreach($data as $task){
-                                        if (!isset($task['prioritas'])) continue;
-                                        $badge = "secondary";
-                                        switch(strtolower($task['status'])){
-                                            case "open":
-                                                $badge="danger";
-                                                break;
-                                            case "issue":
-                                                $badge="warning";
-                                                break;
-                                            case "closed":
-                                                $badge="success";
-                                                break;
-                                        }
-                                    ?>
+                                  <tbody>
+<?php
+
+// ============================
+// Pagination Priority Alert
+// ============================
+
+// Jumlah data per halaman
+$limit = 10;
+
+// Halaman aktif
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+if($page < 1){
+    $page = 1;
+}
+
+// Total data
+$totalData = count($data);
+
+// Total halaman
+$totalPage = ceil($totalData / $limit);
+
+// Data mulai
+$start = ($page - 1) * $limit;
+
+// Ambil 10 data
+$rows = array_slice($data, $start, $limit);
+
+// Tampilkan data
+foreach($rows as $task){
+
+    if (!isset($task['prioritas'])) continue;
+
+    $badge = "secondary";
+
+    switch(strtolower($task['status'])){
+        case "open":
+            $badge="danger";
+            break;
+
+        case "issue":
+            $badge="warning";
+            break;
+
+        case "closed":
+            $badge="success";
+            break;
+    }
+
+?>
                                     <tr>
                                         <td><?= htmlspecialchars($task['id']) ?></td>
                                         <td><?= htmlspecialchars($task['prioritas']) ?></td>
@@ -204,13 +237,86 @@ require_once 'auth.php';
                                     </td>
                                     </tr>
 
-                                    <?php
-                                    $count++;
-                                    if($count>=10) break;
-                                    }
-                                    ?>
+                                  <?php
+                                  }
+                                  ?>
                                     </tbody>
                                 </table>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+
+<?php
+
+$from = ($totalData > 0) ? $start + 1 : 0;
+$to = ($totalData > 0) ? min($start + $limit, $totalData) : 0;
+
+?>
+
+<small class="text-muted">
+Menampilkan <?= $from ?> - <?= $to ?> dari <?= $totalData ?> Data
+</small>
+
+<nav>
+
+<ul class="pagination mb-0">
+
+<li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+    <a class="page-link" href="?page=<?= max(1,$page-1) ?>">
+        Previous
+    </a>
+</li>
+
+<?php
+
+$startPage = max(1, $page - 2);
+$endPage = min($totalPage, $page + 2);
+
+if($startPage > 1){
+
+    echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
+
+    if($startPage > 2){
+        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+}
+
+for($i=$startPage;$i<=$endPage;$i++){
+
+?>
+
+<li class="page-item <?= ($i==$page)?'active':'' ?>">
+    <a class="page-link" href="?page=<?= $i ?>">
+        <?= $i ?>
+    </a>
+</li>
+
+<?php
+
+}
+
+if($endPage < $totalPage){
+
+    if($endPage < $totalPage-1){
+        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+    }
+
+    echo '<li class="page-item"><a class="page-link" href="?page='.$totalPage.'">'.$totalPage.'</a></li>';
+
+}
+
+?>
+
+<li class="page-item <?= ($page >= $totalPage) ? 'disabled' : '' ?>">
+    <a class="page-link" href="?page=<?= min($totalPage,$page+1) ?>">
+        Next
+    </a>
+</li>
+
+</ul>
+
+</nav>
+
+</div>
                             </div>
                         </div>
                     </div>
@@ -305,7 +411,7 @@ require_once 'auth.php';
         </script>
         <script src="script.js"></script>
         <script>
-            fetch('sidebar.php')
+            fetch('sidebar.html')
                 .then(res => res.text())
                 .then(html => {
                     document.getElementById('sidebar-container').innerHTML = html;
