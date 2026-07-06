@@ -29,16 +29,45 @@ require_once 'auth.php';
 
             <div class="content">
 
-                <nav class="navbar bg-white shadow-sm px-4">
+            <!-- Navbar -->
+            <nav class="navbar bg-white shadow-sm px-4 py-3">
+            <div class="container-fluid">
+                
+                <!-- Brand / Page Title -->
+                <span class="navbar-brand fw-bold fs-4 text-dark">
+                    Summary
+                </span>
 
-            <span class="navbar-brand fw-semibold">
-                Inbox Task
-            </span>
+                <!-- Right Side -->
+                <div class="ms-auto d-flex align-items-center gap-3">
 
-            <div class="ms-auto d-flex align-items-center">
-                <i class="bi bi-bell fs-5 me-4"></i>
-                <img src="https://i.pravatar.cc/40" class="rounded-circle me-2">
-                <span>Andy Pratama</span>
+                    <!-- Notification -->
+                    <i class="bi bi-bell fs-5 text-muted" style="cursor: pointer;"></i>
+
+                    <!-- Profile -->
+                    <div class="d-flex align-items-center gap-2">
+                        <img 
+                            src="https://i.pravatar.cc/40" 
+                            alt="Profile" 
+                            class="rounded-circle" 
+                            width="38" 
+                            height="38">
+
+                        <div>
+                            <div class="fw-semibold"><?= htmlspecialchars($_SESSION['nama']) ?></div>
+                            <small class="text-muted"><?= htmlspecialchars($_SESSION['role']) ?></small>
+                        </div>
+                    </div>
+
+                    <!-- Logout -->
+                    <a href="logout.php" 
+                    class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
+                    onclick="return confirm('Yakin ingin logout?')">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </a>
+
+                </div>
             </div>
         </nav>
 
