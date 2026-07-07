@@ -87,10 +87,15 @@ require_once 'auth.php';
                 </div>
 
                 <div>
-                    <button class="btn btn-primary">
-                        <i class="bi bi-arrow-clockwise"></i>
-                        Refresh
-                    </button>
+                   <button
+    type="button"
+    id="btnRefresh"
+    class="btn btn-primary">
+
+    <i class="bi bi-arrow-clockwise"></i>
+    Refresh
+
+</button>
                 </div>
 
             </div>
@@ -99,7 +104,7 @@ require_once 'auth.php';
 
     <div class="card-body">
 
-        <form method="GET">
+        <form id="filterForm">
 
             <div class="row g-3 align-items-end">
 
@@ -117,15 +122,19 @@ require_once 'auth.php';
                         </span>
 
                         <input
-                            type="text"
-                            name="search"
+                        type="text"
+                        id="searchInput"
+                        name="search"
                             class="form-control"
                             placeholder="Cari ID Task atau Customer"
                             value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
 
-                        <button class="btn btn-primary" type="submit">
-                            Cari
-                        </button>
+                       <button 
+    type="button"
+    id="btnCari"
+    class="btn btn-primary">
+    Cari
+</button>
 
                     </div>
 
@@ -138,15 +147,14 @@ require_once 'auth.php';
                         Status
                     </label>
 
-                    <select class="form-select" name="status">
+                <select class="form-select" name="status" id="statusFilter">
 
-                        <option value="">Semua Status</option>
-                        <option value="Open">Open</option>
-                        <option value="On Progress">On Progress</option>
-                        <option value="Waiting">Waiting</option>
-                        <option value="Closed">Closed</option>
+    <option value="">Semua Status</option>
+    <option value="Open">Open</option>
+    <option value="Issue">Issue</option>
+    <option value="Closed">Closed</option>
 
-                    </select>
+</select>
 
                 </div>
 
@@ -206,7 +214,10 @@ require_once 'auth.php';
                 <!-- Tombol Filter -->
                 <div class="col-lg-1 d-grid">
 
-                    <button class="btn btn-primary" type="submit">
+                  <button 
+type="button"
+id="btnFilter"
+class="btn btn-primary">
 
                         <i class="bi bi-funnel"></i>
 
@@ -271,130 +282,9 @@ require_once 'auth.php';
                             </tr>
 
                         </thead>
-
-<tbody>
-
-<?php
-// Ambil keyword dari form search
-$search = $_GET['search'] ?? "";
-
-$url = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
-
-if($search != ""){
-    $url .= "?search=" . urlencode($search);
-}
-// Ambil data
-$json = file_get_contents($url);
-
-$data = json_decode($json, true);
-
-// =======================
-// Detail Task
-// =======================
-$detail = null;
-
-if(isset($_GET['id'])){
-
-    $id = $_GET['id'];
-
-    foreach($data['tasks'] as $task){
-
-        if($task['id'] == $id){
-
-            $detail = $task;
-            break;
-
-        }
-
-    }
-
-}
-
-// =======================
-// Daftar Task
-// =======================
-if(isset($data['tasks'])){
-
-    // Jumlah data per halaman
-    $limit = 5;
-
-    // Halaman aktif
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-
-    if($page < 1){
-        $page = 1;
-    }
-
-// Total data
-$totalData = count($data['tasks']);
-
-// Total halaman
-$totalPage = ceil($totalData / $limit);
-
-// Data mulai
-$start = ($page - 1) * $limit;
-
-// Ambil hanya 5 data
-$rows = array_slice($data['tasks'], $start, $limit);
-
-foreach($rows as $row){
-
-        // Badge Prioritas
-        $priorityClass = "secondary";
-
-        if($row['prioritas']=="High"){
-            $priorityClass="danger";
-        }elseif($row['prioritas']=="Medium"){
-            $priorityClass="warning";
-        }elseif($row['prioritas']=="Low"){
-            $priorityClass="success";
-        }
-
-        // Badge Status
-        $statusClass="secondary";
-
-        if($row['status']=="Open"){
-            $statusClass="danger";
-        }elseif($row['status']=="On Progress"){
-            $statusClass="primary";
-        }elseif($row['status']=="Waiting"){
-            $statusClass="warning";
-        }elseif($row['status']=="Closed"){
-            $statusClass="success";
-        }
-
-        echo "<tr>";
-
-        echo "<td>{$row['id']}</td>";
-        echo "<td>{$row['tipe']}</td>";
-        echo "<td>{$row['customer']}</td>";
-        echo "<td>{$row['area']}</td>";
-        echo "<td>{$row['sla']}</td>";
-        echo "<td>{$row['sisa_waktu']}</td>";
-
-        echo "<td><span class='badge bg-$priorityClass'>{$row['prioritas']}</span></td>";
-
-        echo "<td><span class='badge bg-$statusClass'>{$row['status']}</span></td>";
-
-   echo "<td>
-        <a href='inbox.php?id=".urlencode($row['id'])."' class='btn btn-sm btn-outline-primary'>
-            <i class='bi bi-eye'></i>
-        </a>
-      </td>";
-    }
-
-}else{
-
-    echo "<tr>";
-    echo "<td colspan='9' class='text-center'>Tidak ada data</td>";
-    echo "</tr>";
-
-}
-
-?>
+<tbody id="taskTableBody">
 
 </tbody>
-
                     </table>
 
                 </div>
@@ -405,73 +295,10 @@ foreach($rows as $row){
 
                     <small class="text-muted">
 
-                       <?php
-$from = ($totalData > 0) ? $start + 1 : 0;
-$to = ($totalData > 0) ? min($start + $limit, $totalData) : 0;
-?>
-
-<small class="text-muted">
-Menampilkan <?= $from ?> - <?= $to ?> dari <?= $totalData ?> Task
-</small>
-
-                    </small>
-
-                    <nav>
-
- <ul class="pagination mb-0">
-
-<!-- Previous -->
-<li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-    <a class="page-link" href="?page=<?= max(1,$page-1) ?>">
-        Previous
-    </a>
-</li>
-
-<?php
-
-$startPage = max(1, $page - 2);
-$endPage   = min($totalPage, $page + 2);
-
-if($startPage > 1){
-    echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
-
-    if($startPage > 2){
-        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-    }
-}
-
-for($i=$startPage; $i<=$endPage; $i++){
-?>
-
-<li class="page-item <?= ($i==$page)?'active':'' ?>">
-    <a class="page-link" href="?page=<?= $i ?>">
-        <?= $i ?>
-    </a>
-</li>
-
-<?php
-}
-
-if($endPage < $totalPage){
-
-    if($endPage < $totalPage-1){
-        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-    }
-
-    echo '<li class="page-item"><a class="page-link" href="?page='.$totalPage.'">'.$totalPage.'</a></li>';
-}
-?>
-
-<!-- Next -->
-<li class="page-item <?= ($page >= $totalPage) ? 'disabled' : '' ?>">
-    <a class="page-link" href="?page=<?= min($totalPage,$page+1) ?>">
-        Next
-    </a>
-</li>
-
-</ul>
-
-                    </nav>
+                      <small id="tableInfo"></small>
+<nav>
+<ul class="pagination mb-0" id="pagination"></ul>
+</nav>
 
                 </div>
 
@@ -505,47 +332,47 @@ if($endPage < $totalPage){
 
                             <tr>
                                 <th width="35%">ID Task</th>
-                               <td>: <?= $detail['id'] ?? '-' ?></td>
+                               <td id="detail-id">-</td>
                             </tr>
 
                             <tr>
                                 <th>Tipe</th>
-                             <td>: <?= $detail['tipe'] ?? '-' ?></td>
+                             <td id="detail-tipe">-</td>
                             </tr>
 
                             <tr>
                                 <th>Customer</th>
-                                <td>: <?= $detail['customer'] ?? '-' ?></td>
+                                <td id="detail-customer">-</td>
                             </tr>
 
                             <tr>
                                 <th>Area</th>
-                                <td>: <?= $detail['area'] ?? '-' ?></td>
+                                <td id="detail-area">-</td>
                             </tr>
 
                             <tr>
                                 <th>Prioritas</th>
-                              <td>: <?= $detail['prioritas'] ?? '-' ?></td>
+                              <td id="detail-prioritas">-</td>
                             </tr>
 
                             <tr>
                                 <th>Status</th>
-                             <td>: <?= $detail['status'] ?? '-' ?></td>
+                             <td id="detail-status">-</td>
                             </tr>
 
                             <tr>
                                 <th>SLA</th>
-                                <td>: <?= $detail['sla'] ?? '-' ?></td>
+                                <td id="detail-sla">-</td>
                             </tr>
 
                             <tr>
                                 <th>Sisa Waktu</th>
-                                <td>: <?= $detail['sisa_waktu'] ?? '-' ?></td>
+                                <td id="detail-sisa-waktu">-</td>
                             </tr>
 
                             <tr>
                                 <th>Dibuat</th>
-                                <td>: 21 Juli 2025 08:30</td>
+                                <td id="detail-dibuat">-</td>
                             </tr>
 
                         </table>
@@ -554,7 +381,7 @@ if($endPage < $totalPage){
 
                     <!-- Update Task -->
                     <div class="col-lg-6">
-
+                        <input type="hidden" id="selectedTaskId">
                         <h6 class="fw-bold mb-3">
                             Update Task
                         </h6>
@@ -565,23 +392,15 @@ if($endPage < $totalPage){
                                 Update Status
                             </label>
 
-                            <select class="form-select">
+                         <select
+id="updateStatus"
+class="form-select">
 
-                                <option>Open</option>
+<option value="Open">Open</option>
+<option value="Issue">Issue</option>
+<option value="Closed">Closed</option>
 
-                                <option selected>
-                                    On Progress
-                                </option>
-
-                                <option>
-                                    Waiting
-                                </option>
-
-                                <option>
-                                    Closed
-                                </option>
-
-                            </select>
+</select>
 
                         </div>
 
@@ -591,10 +410,12 @@ if($endPage < $totalPage){
                                 Catatan
                             </label>
 
-                            <textarea
-                                class="form-control"
-                                rows="5"
-                                placeholder="Masukkan catatan update task..."></textarea>
+                          <textarea
+                          id="updateCatatan"
+                          class="form-control"
+                          rows="5"
+                          placeholder="Masukkan catatan...">
+                          </textarea>
 
                         </div>
 
@@ -619,14 +440,15 @@ if($endPage < $totalPage){
                                 Batal
 
                             </button>
+<button
+type="button"
+id="btnSimpan"
+class="btn btn-primary">
 
-                            <button class="btn btn-primary">
+<i class="bi bi-check-circle"></i>
+Simpan
 
-                                <i class="bi bi-check-circle"></i>
-
-                                Simpan
-
-                            </button>
+</button>
 
                         </div>
 
@@ -645,18 +467,166 @@ if($endPage < $totalPage){
     </div>
 
 </div>
-        <script>
-            fetch('sidebar.html')
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    const links = document.querySelectorAll('.sidebar .nav-link');
-                    links.forEach(link => {
-                        if (link.href === window.location.href) {
-                            link.classList.add('active');
-                        }
-                    });
-                });
-        </script>
+      <script>
+
+fetch('sidebar.html')
+    .then(res => res.text())
+    .then(html => {
+        document.getElementById('sidebar-container').innerHTML = html;
+        const links = document.querySelectorAll('.sidebar .nav-link');
+        links.forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+const API_URL = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
+let allTasks = [];
+let currentPage = 1;
+const rowsPerPage = 5;
+async function loadTasks() {
+
+    const keyword = document.getElementById("searchInput").value;
+
+    const status = document.getElementById("statusFilter").value;
+
+    const url =
+        API_URL +
+        "?search=" + encodeURIComponent(keyword) +
+        "&status=" + encodeURIComponent(status);
+
+    const res = await fetch(url);
+
+    const data = await res.json();
+    
+    console.log(data);
+
+
+  allTasks = data.tasks;
+currentPage = 1;
+
+renderTable();
+renderPagination();
+
+}
+
+function renderTable(){
+
+    const tbody = document.getElementById("taskTableBody");
+
+    const start = (currentPage-1)*rowsPerPage;
+    const end = start + rowsPerPage;
+
+    const pageData = allTasks.slice(start,end);
+
+    let html="";
+
+    pageData.forEach(task=>{
+
+        html += `
+        <tr>
+            <td>${task.id}</td>
+            <td>${task.tipe}</td>
+            <td>${task.customer}</td>
+            <td>${task.area}</td>
+            <td>${task.sla}</td>
+            <td>${task.sisa_waktu}</td>
+            <td>${task.prioritas}</td>
+            <td>${task.status}</td>
+         <td>
+         
+<button 
+class="btn btn-primary btn-sm"
+onclick='showDetail(${JSON.stringify(task)})'>
+Detail
+</button>
+</td>
+        </tr>`;
+    });
+
+
+    tbody.innerHTML = html;
+
+
+    document.getElementById("tableInfo").innerHTML =
+        `Menampilkan ${start+1}-${Math.min(end,allTasks.length)} dari ${allTasks.length} data`;
+
+}  // <-- INI YANG KURANG
+
+function showDetail(task){
+
+    document.getElementById("detail-id").innerHTML = task.id;
+    document.getElementById("detail-tipe").innerHTML = task.tipe;
+    document.getElementById("detail-customer").innerHTML = task.customer;
+    document.getElementById("detail-area").innerHTML = task.area;
+    document.getElementById("detail-prioritas").innerHTML = task.prioritas;
+    document.getElementById("detail-status").innerHTML = task.status;
+    document.getElementById("detail-sla").innerHTML = task.sla;
+    document.getElementById("detail-sisa-waktu").innerHTML = task.sisa_waktu;
+    document.getElementById("detail-dibuat").innerHTML = task.dibuat ?? "-";
+
+
+    document.getElementById("selectedTaskId").value = task.id;
+
+}
+
+function renderPagination(){
+
+    const pagination = document.getElementById("pagination");
+
+    pagination.innerHTML="";
+
+    const totalPage = Math.ceil(allTasks.length / rowsPerPage);
+
+
+    for(let i=1;i<=totalPage;i++){
+
+        pagination.innerHTML += `
+        <li class="page-item ${i===currentPage?'active':''}">
+            <button class="page-link" onclick="changePage(${i})">
+                ${i}
+            </button>
+        </li>
+        `;
+
+    }
+
+}
+
+
+function changePage(page){
+
+    currentPage = page;
+
+    renderTable();
+    renderPagination();
+
+}
+
+// Cari
+document.getElementById("btnCari").addEventListener("click", function () {
+
+    loadTasks();
+
+});
+
+
+// Filter
+document.getElementById("btnFilter").addEventListener("click", function () {
+
+    loadTasks();
+
+});
+
+
+// Pertama kali halaman dibuka
+window.onload = function () {
+
+    loadTasks();
+
+}
+
+</script>
     </body>
 </html>
