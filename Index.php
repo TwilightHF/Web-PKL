@@ -1,5 +1,6 @@
 <?php
 require_once 'auth.php';
+$role = strtoupper($_SESSION['role'] ?? '');
 ?>
 
 <!doctype html>
@@ -8,17 +9,20 @@ require_once 'auth.php';
     <title>Dashboard Fulfillment</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
+
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.8/js/dataTables.js"></script>
 </head>
- 
 <body>
     <div class="d-flex">
         <div id="sidebar-container"></div>
- 
+
         <div class="content flex-grow-1">
- 
             <!-- Navbar -->
             <nav class="navbar bg-white shadow-sm px-4 py-3">
                 <span class="navbar-brand fw-bold fs-4">Summary</span>
@@ -34,86 +38,54 @@ require_once 'auth.php';
                     </a>
                 </div>
             </nav>
- 
+
             <div class="container-fluid p-4">
- 
-                <h3>
-                    Selamat pagi, <?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?><br>
-                    <small><?= htmlspecialchars($_SESSION['role'] ?? '') ?></small>
-                </h3>
- 
+                <h3>Selamat pagi, <?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></h3>
+
                 <!-- Summary Cards -->
                 <div class="row g-3 mt-3">
-                    <?php
-                    $api = "https://script.google.com/macros/s/AKfycbynNmRaZaE60vlYXShe8LURR2ipoC-LXs-IrCHpg7bBnfiyPu97Xz0GU5wBZLoEBRxKcg/exec";
-                    $json = @file_get_contents($api);
-                    $response = json_decode($json, true) ?? [];
-
-                    $total  = $response["total"] ?? 0;
-                    $open   = $response["open"] ?? 0;
-                    $issue  = $response["progress"] ?? 0;
-                    $closed = $response["closed"] ?? 0;
-                    ?>
-                    
-                    <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
                                 <h6 class="text-muted">Total Task</h6>
-                                <h2 class="text-primary"><?= $total ?></h2>
+                                <h2 class="text-primary" id="totalTask">0</h2>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
                                 <h6 class="text-muted">Open Task</h6>
-                                <h2 class="text-danger"><?= $open ?></h2>
+                                <h2 class="text-danger" id="openTask">0</h2>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
                                 <h6 class="text-muted">Issue</h6>
-                                <h2 class="text-warning"><?= $issue ?></h2>
+                                <h2 class="text-warning" id="issueTask">0</h2>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
-                                <h6 class="text-muted">Closed</h6>
-                                <h2 class="text-success"><?= $closed ?></h2>
+                                <h6 class="text-muted">Confirmation</h6>
+                                <h2 class="text-success" id="confirmTask">0</h2>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Priority Alert -->
+                <!-- Priority Order -->
                 <div class="card shadow-sm mt-4">
-                    <div class="card-header fw-bold">Priority Alert</div>
+                    <div class="card-header fw-bold">Priority Order &gt; 20 Hari</div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>ID Task</th>
-                                        <th>Tipe</th>
-                                        <th>Customer</th>
-                                        <th>Area</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="priorityTableBody"></tbody>
-                            </table>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <small class="text-muted" id="priorityInfo">Menampilkan 1 - 10 dari 0 Data</small>
-                            <nav>
-                                <ul class="pagination mb-0" id="priorityPagination"></ul>
-                            </nav>
-                        </div>
+                        <table id="priorityTable" class="table table-hover align-middle" style="width:100%">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -121,47 +93,32 @@ require_once 'auth.php';
                 <div class="row mt-4">
                     <div class="col-lg-6 mb-4">
                         <div class="card shadow-sm h-100">
-                            <div class="card-header fw-bold">Task by Status</div>
+                            <div class="card-header fw-bold">Task Open by Program</div>
                             <div class="card-body">
-                                <canvas id="statusChart"></canvas>
+                                <canvas id="pieChart" height="300"></canvas>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-6 mb-4">
                         <div class="card shadow-sm h-100">
-                            <div class="card-header fw-bold">Task by Area</div>
+                            <div class="card-header fw-bold">Task Open by Regional</div>
                             <div class="card-body">
-                                <canvas id="areaChart"></canvas>
+                                <canvas id="barChart" height="300"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">Recent Activity</span>
-                        <a href="#" class="text-decoration-none">Lihat semua</a>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 align-middle">
-                            <tbody>
-                                <?php
-                                $recent = $response["recent_activity"] ?? [];
-                                foreach($recent as $i => $task){ ?>
-                                <tr>
-                                    <td><?= $i+1 ?></td>
-                                    <td><?= htmlspecialchars($task['customer'] ?? '') ?></td>
-                                    <td class="text-end">
-                                        <span class="badge bg-info"><?= htmlspecialchars($task['status'] ?? '') ?></span>
-                                    </td>
-                                </tr>
-                                <?php } ?>
-                            </tbody>
+                <!-- New Site On Air -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header fw-bold">New Site On Air</div>
+                    <div class="card-body">
+                        <table id="onAirTable" class="table table-hover" style="width:100%">
+                            <thead></thead>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -171,105 +128,157 @@ require_once 'auth.php';
     <script src="script.js"></script>
 
     <script>
-    let allTasks = [];
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyJP0RhndjbMzwWW7rXumBBqsRDLGy4F2Ise630Z9jaSxzqmg_4AoBIBnQ4-w9YW8HUpw/exec";
+    const USER_ROLE = <?= json_encode($role) ?>; // MSO / MBB / SS / ED, dikirim dari session PHP
 
-    async function loadAllData() {
-        const tbody = document.getElementById('priorityTableBody');
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center">Sedang memuat data...</td></tr>`;
+    let priorityDataTable = null;
+    let onAirDataTable = null;
+    let pieChartInstance = null;
+    let barChartInstance = null;
 
+    function statusBadge(status) {
+        const s = (status || '').toLowerCase();
+        let cls = 'bg-secondary';
+        if (s === 'open') cls = 'bg-danger';
+        else if (s === 'issue') cls = 'bg-warning text-dark';
+        else if (s === 'closed') cls = 'bg-success';
+        return `<span class="badge ${cls}">${status || '-'}</span>`;
+    }
+
+    async function loadDashboardData() {
         try {
-            const res = await fetch("https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec");
-            
-            if (!res.ok) throw new Error("Gagal koneksi");
+            const url = `${GAS_URL}?role=${encodeURIComponent(USER_ROLE)}`;
+            const res = await fetch(url);
 
-            const data = await res.json();
-            
-            console.log("Data diterima:", data); // Debug di console
-
-            if (data.tasks && data.tasks.length > 0) {
-                allTasks = data.tasks;
-                renderPriorityTable(1);
-            } else {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Tidak ada data task</td></tr>`;
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status} - cek deploy Apps Script (Who has access: Anyone)`);
             }
-        } catch (e) {
-            console.error("Error:", e);
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat data Priority Alert</td></tr>`;
+
+            const raw = await res.text();
+            let response;
+            try {
+                response = JSON.parse(raw);
+            } catch (parseErr) {
+                console.error("Response bukan JSON, isinya:", raw.slice(0, 300));
+                throw new Error("Response dari Apps Script bukan JSON. Cek URL deploy / permission-nya.");
+            }
+
+            console.log("Data diterima:", response);
+
+            if (!response.success) {
+                throw new Error(response.message || "Gagal mengambil data.");
+            }
+
+            renderSummaryCards(response);
+            renderPriorityTable(response.priority_order || []);
+            renderCharts(response.task_by_program || {}, response.task_by_region || {});
+            renderOnAirTable(response.on_air || []);
+
+        } catch (err) {
+            console.error("Error loadDashboardData:", err);
+            const tbody = document.querySelector('#priorityTable tbody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger py-3">
+                    Gagal memuat data: ${err.message}
+                </td></tr>`;
+            }
         }
     }
 
-    function renderPriorityTable(page) {
-        const limit = 10;
-        const start = (page - 1) * limit;
-        const paginated = allTasks.slice(start, start + limit);
-        const tbody = document.getElementById('priorityTableBody');
-        
-        tbody.innerHTML = '';
+    function renderSummaryCards(response) {
+        document.getElementById('totalTask').textContent = response.total ?? 0;
+        document.getElementById('openTask').textContent = response.open ?? 0;
+        document.getElementById('issueTask').textContent = response.issue ?? 0;
+        document.getElementById('confirmTask').textContent = response.confirm ?? 0;
+    }
 
-        if (paginated.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center">Tidak ada data</td></tr>`;
-            return;
+    function renderPriorityTable(rows) {
+        if (priorityDataTable) {
+            priorityDataTable.destroy();
+            document.querySelector('#priorityTable').innerHTML = '<thead></thead><tbody></tbody>';
         }
 
-        paginated.forEach(task => {
-            const badge = getStatusClass(task.status);
-            tbody.innerHTML += `
-                <tr>
-                    <td>${task.id || '-'}</td>
-                    <td>${task.prioritas || '-'}</td>
-                    <td>${task.customer || '-'}</td>
-                    <td>${task.area || '-'}</td>
-                    <td><span class="badge bg-${badge}">${task.status || '-'}</span></td>
-                </tr>`;
+        priorityDataTable = new DataTable('#priorityTable', {
+            data: rows,
+            columns: [
+                { title: 'No', data: null, render: (d, t, r, meta) => meta.row + 1, orderable: false },
+                { title: 'Uniq', data: 'uniq', defaultContent: '-' },
+                { title: 'TTD', data: 'ttd', defaultContent: '-', render: d => d === null ? '-' : `${d} hari` },
+                { title: 'Site ID', data: 'id', defaultContent: '-' },
+                { title: 'Site Name', data: 'site_name', defaultContent: '-' },
+                { title: 'Status Deploy', data: 'status_deploy', defaultContent: '-' },
+                { title: 'Sow Order', data: 'sow_order', defaultContent: '-' },
+                { title: 'Mitra Final', data: 'mitra_final', defaultContent: '-' },
+                { title: 'Milestone', data: 'milestone', defaultContent: '-' },
+                { title: 'Status Final TIF', data: 'status', defaultContent: '-', render: d => statusBadge(d) }
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            order: [[2, 'desc']], // urut TTD terbesar dulu
+            language: {
+                search: "Cari:",
+                lengthMenu: "_MENU_ entries per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: { previous: "Sebelumnya", next: "Berikutnya" },
+                zeroRecords: "Tidak ada data yang cocok"
+            }
+        });
+    }
+
+    function renderCharts(byProgram, byRegion) {
+        if (pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(byProgram),
+                datasets: [{ data: Object.values(byProgram) }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
         });
 
-        document.getElementById('priorityInfo').textContent = 
-            `Menampilkan ${start+1} - ${Math.min(start+limit, allTasks.length)} dari ${allTasks.length} Data`;
-
-        renderPagination(page);
+        if (barChartInstance) barChartInstance.destroy();
+        barChartInstance = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(byRegion),
+                datasets: [{ label: 'Open Task', data: Object.values(byRegion) }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
     }
 
-    function getStatusClass(s) {
-        if (!s) return "secondary";
-        const st = s.toLowerCase();
-        if (st.includes("open")) return "danger";
-        if (st.includes("progress") || st.includes("issue")) return "warning";
-        if (st.includes("closed")) return "success";
-        return "primary";
-    }
-
-    function renderPagination(current) {
-        const totalPage = Math.ceil(allTasks.length / 10);
-        let html = '';
-
-        html += `<li class="page-item ${current <= 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${current-1});return false">Previous</a></li>`;
-
-        for (let i = Math.max(1, current-2); i <= Math.min(totalPage, current+2); i++) {
-            html += `<li class="page-item ${i === current ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i});return false">${i}</a></li>`;
+    function renderOnAirTable(rows) {
+        if (onAirDataTable) {
+            onAirDataTable.destroy();
+            document.querySelector('#onAirTable').innerHTML = '<thead></thead><tbody></tbody>';
         }
 
-        html += `<li class="page-item ${current >= totalPage ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${current+1});return false">Next</a></li>`;
-
-        document.getElementById('priorityPagination').innerHTML = html;
+        onAirDataTable = new DataTable('#onAirTable', {
+            data: rows,
+            columns: [
+                { title: 'Tanggal On Air', data: 'oa_date', defaultContent: '-' },
+                { title: 'Site ID', data: 'id', defaultContent: '-' },
+                { title: 'NIM', data: 'nim', defaultContent: '-' },
+                { title: 'Site Name', data: 'site_name', defaultContent: '-' },
+                { title: 'Program', data: 'tipe', defaultContent: '-' }
+            ],
+            paging: false,
+            searching: false,
+            info: false,
+            order: []
+        });
     }
 
-    function changePage(page) {
-        if (page < 1 || page > Math.ceil(allTasks.length / 10)) return;
-        renderPriorityTable(page);
-    }
-
-    // Jalankan
-    window.onload = loadAllData;
+    window.onload = loadDashboardData;
 
     // Sidebar
-    fetch('sidebar.html')
-        .then(res => res.text())
-        .then(html => {
-            document.getElementById('sidebar-container').innerHTML = html;
-            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-                if (link.href === window.location.href) link.classList.add('active');
-            });
-        });
+    fetch('sidebar.html').then(res => res.text()).then(html => {
+        document.getElementById('sidebar-container').innerHTML = html;
+    });
     </script>
 </body>
 </html>
