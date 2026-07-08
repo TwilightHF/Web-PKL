@@ -429,6 +429,8 @@ require_once 'auth.php';
                                     id="updateLampiran"
                                     class="form-control">
 
+                                <small class="text-muted">Opsional. Maks. sekitar 5-10MB (batasan Apps Script/Drive).</small>
+
                             </div>
 
                             <div class="text-end">
@@ -785,7 +787,10 @@ require_once 'auth.php';
 
         // Sinkronkan form update dengan status task yang dipilih
         document.getElementById("updateStatus").value = task.status ?? "Open";
-        document.getElementById("updateCatatan").value = "";
+        document.getElementById("updateCatatan").value = task.catatan ?? "";
+
+        const lampiran = document.getElementById("updateLampiran");
+        if (lampiran) lampiran.value = "";
     }
 
     // Hitung daftar nomor halaman yang ditampilkan, dengan "..." untuk
@@ -888,7 +893,17 @@ require_once 'auth.php';
 
     }
 
-    // ---- Simpan update task ----
+    // ---- Helper: convert File -> base64 (tanpa prefix "data:...;base64,") ----
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ---- Simpan update task ke Apps Script / Google Sheet ----
     async function saveTaskUpdate() {
 
         const id = document.getElementById("selectedTaskId").value;
@@ -898,36 +913,74 @@ require_once 'auth.php';
             return;
         }
 
-        const payload = {
-            action: "update",
-            id: id,
-            status: document.getElementById("updateStatus").value,
-            catatan: document.getElementById("updateCatatan").value
-        };
-
         const btnSimpan = document.getElementById("btnSimpan");
         const originalText = btnSimpan.innerHTML;
         btnSimpan.disabled = true;
-        btnSimpan.innerHTML = "Menyimpan...";
+        btnSimpan.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...`;
 
         try {
+
+            const payload = {
+                action: "update",
+                id: id,
+                status: document.getElementById("updateStatus").value,
+                catatan: document.getElementById("updateCatatan").value
+            };
+
+            // Lampiran opsional
+            const fileInput = document.getElementById("updateLampiran");
+            const file = fileInput && fileInput.files[0];
+
+            if (file) {
+                // Batasi ukuran file di sisi client supaya tidak gagal diam-diam
+                const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+                if (file.size > MAX_SIZE) {
+                    throw new Error("Ukuran file lampiran terlalu besar (maks. 8MB).");
+                }
+
+                const base64Data = await fileToBase64(file);
+                payload.lampiran = {
+                    data: base64Data,
+                    mimeType: file.type,
+                    fileName: file.name
+                };
+            }
+
             const res = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             });
 
+            const rawText = await res.text();
+
+            console.log("Status HTTP (update):", res.status);
+            console.log("Response mentah (update):", rawText);
+
             if (!res.ok) {
-                throw new Error("Gagal menyimpan (status " + res.status + ")");
+                throw new Error("Server merespons dengan status " + res.status);
             }
 
-            showToast("Task berhasil diperbarui.");
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseErr) {
+                throw new Error(
+                    "Response bukan JSON yang valid. Cek Console/Network untuk detail."
+                );
+            }
+
+            if (!data.success) {
+                throw new Error(data.error || "Update ditolak oleh server.");
+            }
+
+            showToast("Task " + id + " berhasil diperbarui.");
             clearCache();
             await loadTasks();
 
         } catch (err) {
-            console.error(err);
-            showToast("Gagal menyimpan perubahan task.", true);
+            console.error("Gagal menyimpan update task:", err);
+            showToast("Gagal menyimpan perubahan task: " + err.message, true);
         } finally {
             btnSimpan.disabled = false;
             btnSimpan.innerHTML = originalText;
