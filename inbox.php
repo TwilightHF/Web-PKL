@@ -71,10 +71,8 @@ require_once 'auth.php';
             </div>
         </nav>
 
-        <!-- paste kode temanmu di sini -->
+        <!-- Konten utama -->
         <div class="container-fluid p-4">
-
-            <div class="container-fluid p-4">
 
             <!-- Judul -->
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -87,546 +85,374 @@ require_once 'auth.php';
                 </div>
 
                 <div>
-                    <button class="btn btn-primary">
+                   <button
+                        type="button"
+                        id="btnRefresh"
+                        class="btn btn-primary">
+
                         <i class="bi bi-arrow-clockwise"></i>
                         Refresh
+
                     </button>
                 </div>
 
             </div>
-<!-- Card Filter -->
-<div class="card shadow-sm border-0">
 
-    <div class="card-body">
+            <!-- Card Filter -->
+            <div class="card shadow-sm border-0">
 
-        <form method="GET">
+                <div class="card-body">
 
-            <div class="row g-3 align-items-end">
+                    <form id="filterForm">
 
-                <!-- Search -->
-                <div class="col-lg-4">
+                        <div class="row g-3 align-items-end">
 
-                    <label class="form-label fw-semibold">
-                        Search
-                    </label>
+                            <!-- Search -->
+                            <div class="col-lg-4">
 
-                    <div class="input-group">
+                                <label class="form-label fw-semibold">
+                                    Search
+                                </label>
 
-                        <span class="input-group-text bg-white">
-                            <i class="bi bi-search"></i>
-                        </span>
+                                <div class="input-group">
 
-                        <input
-                            type="text"
-                            name="search"
-                            class="form-control"
-                            placeholder="Cari ID Task atau Customer"
-                            value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                                    <span class="input-group-text bg-white">
+                                        <i class="bi bi-search"></i>
+                                    </span>
 
-                        <button class="btn btn-primary" type="submit">
-                            Cari
-                        </button>
+                                    <input
+                                    type="text"
+                                    id="searchInput"
+                                    name="search"
+                                        class="form-control"
+                                        placeholder="Cari ID Task atau Customer"
+                                        value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+
+                                   <button 
+                                        type="button"
+                                        id="btnCari"
+                                        class="btn btn-primary">
+                                        Cari
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-lg-2">
+
+                                <label class="form-label fw-semibold">
+                                    Status
+                                </label>
+
+                            <select class="form-select" name="status" id="statusFilter">
+
+                                <option value="">Semua Status</option>
+                                <option value="Open">Open</option>
+                                <option value="Issue">Issue</option>
+                                <option value="Closed">Closed</option>
+
+                            </select>
+
+                            </div>
+
+                            <!-- Tipe (dinonaktifkan) -->
+                            <div class="col-lg-2">
+
+                                <label class="form-label fw-semibold">
+                                    Tipe
+                                </label>
+
+                                <select class="form-select" name="tipe" id="tipeFilter" disabled>
+
+                                    <option value="">Semua Tipe</option>
+                                    <option value="Incident">Incident</option>
+                                    <option value="Request">Request</option>
+                                    <option value="Maintenance">Maintenance</option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- Prioritas (dinonaktifkan) -->
+                            <div class="col-lg-2">
+
+                                <label class="form-label fw-semibold">
+                                    Prioritas
+                                </label>
+
+                                <select class="form-select" name="prioritas" id="prioritasFilter" disabled>
+
+                                    <option value="">Semua Prioritas</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- SLA (dinonaktifkan) -->
+                            <div class="col-lg-1">
+
+                                <label class="form-label fw-semibold">
+                                    SLA
+                                </label>
+
+                                <select class="form-select" name="sla" id="slaFilter" disabled>
+
+                                    <option value="">Semua</option>
+                                    <option value="Dalam SLA">Dalam SLA</option>
+                                    <option value="Lewat SLA">Lewat SLA</option>
+
+                                </select>
+
+                            </div>
+
+                            <!-- Tombol Filter -->
+                            <div class="col-lg-1 d-grid">
+
+                              <button 
+                                type="button"
+                                id="btnFilter"
+                                class="btn btn-primary">
+
+                                    <i class="bi bi-funnel"></i>
+
+                                    Filter
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <br>
+
+            <!-- Card Table -->
+            <div class="card shadow-sm border-0">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <div>
+                            <h5 class="mb-0 fw-bold">Daftar Task</h5>
+                            <small class="text-muted">
+                                Menampilkan seluruh task yang tersedia
+                            </small>
+                        </div>
+
+                     <button class="btn btn-primary">
+
+                                    <i class="bi bi-funnel"></i>
+
+                                 + buat taks baru
+
+                                </button>
 
                     </div>
 
-                </div>
+                    <div class="table-responsive">
 
-                <!-- Status -->
-                <div class="col-lg-2">
+                        <table class="table table-hover align-middle text-center" id="taskTable">
 
-                    <label class="form-label fw-semibold">
-                        Status
-                    </label>
+                            <thead class="table-light">
 
-                    <select class="form-select" name="status">
+                                <tr>
 
-                        <option value="">Semua Status</option>
-                        <option value="Open">Open</option>
-                        <option value="On Progress">On Progress</option>
-                        <option value="Waiting">Waiting</option>
-                        <option value="Closed">Closed</option>
+                                    <th>ID Task</th>
+                                    <th>Tipe</th>
+                                    <th>Customer</th>
+                                    <th>Area</th>
+                                    <th>SLA</th>
+                                    <th>Sisa Waktu</th>
+                                    <th>Prioritas</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
 
-                    </select>
+                                </tr>
 
-                </div>
+                            </thead>
+                            <tbody id="taskTableBody">
 
-                <!-- Tipe -->
-                <div class="col-lg-2">
-
-                    <label class="form-label fw-semibold">
-                        Tipe
-                    </label>
-
-                    <select class="form-select" name="tipe">
-
-                        <option value="">Semua Tipe</option>
-                        <option value="Incident">Incident</option>
-                        <option value="Request">Request</option>
-                        <option value="Maintenance">Maintenance</option>
-
-                    </select>
-
-                </div>
-
-                <!-- Prioritas -->
-                <div class="col-lg-2">
-
-                    <label class="form-label fw-semibold">
-                        Prioritas
-                    </label>
-
-                    <select class="form-select" name="prioritas">
-
-                        <option value="">Semua Prioritas</option>
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-
-                    </select>
-
-                </div>
-
-                <!-- SLA -->
-                <div class="col-lg-1">
-
-                    <label class="form-label fw-semibold">
-                        SLA
-                    </label>
-
-                    <select class="form-select" name="sla">
-
-                        <option value="">Semua</option>
-                        <option value="Dalam SLA">Dalam SLA</option>
-                        <option value="Lewat SLA">Lewat SLA</option>
-
-                    </select>
-
-                </div>
-
-                <!-- Tombol Filter -->
-                <div class="col-lg-1 d-grid">
-
-                    <button class="btn btn-primary" type="submit">
-
-                        <i class="bi bi-funnel"></i>
-
-                        Filter
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-<br>
-
-        <!-- Card Table -->
-        <div class="card shadow-sm border-0">
-
-            <div class="card-body">
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-
-                    <div>
-                        <h5 class="mb-0 fw-bold">Daftar Task</h5>
-                        <small class="text-muted">
-                            Menampilkan seluruh task yang tersedia
-                        </small>
-                    </div>
-
-                 <button class="btn btn-primary">
-
-                                <i class="bi bi-funnel"></i>
-
-                             + buat taks baru
-
-                            </button>
-
-                </div>
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover align-middle text-center" id="taskTable">
-
-                        <thead class="table-light">
-
-                            <tr>
-
-                                <th>ID Task</th>
-                                <th>Tipe</th>
-                                <th>Customer</th>
-                                <th>Area</th>
-                                <th>SLA</th>
-                                <th>Sisa Waktu</th>
-                                <th>Prioritas</th>
-                                <th>Status</th>
-                                <th>Action</th>
-
-                            </tr>
-
-                        </thead>
-
-<tbody>
-
-<?php
-// Ambil keyword dari form search
-$search = $_GET['search'] ?? "";
-
-$url = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
-
-if($search != ""){
-    $url .= "?search=" . urlencode($search);
-}
-// Ambil data
-$json = file_get_contents($url);
-
-$data = json_decode($json, true);
-
-// =======================
-// Detail Task
-// =======================
-$detail = null;
-
-if(isset($_GET['id'])){
-
-    $id = $_GET['id'];
-
-    foreach($data['tasks'] as $task){
-
-        if($task['id'] == $id){
-
-            $detail = $task;
-            break;
-
-        }
-
-    }
-
-}
-
-// =======================
-// Daftar Task
-// =======================
-if(isset($data['tasks'])){
-
-    // Jumlah data per halaman
-    $limit = 5;
-
-    // Halaman aktif
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-
-    if($page < 1){
-        $page = 1;
-    }
-
-// Total data
-$totalData = count($data['tasks']);
-
-// Total halaman
-$totalPage = ceil($totalData / $limit);
-
-// Data mulai
-$start = ($page - 1) * $limit;
-
-// Ambil hanya 5 data
-$rows = array_slice($data['tasks'], $start, $limit);
-
-foreach($rows as $row){
-
-        // Badge Prioritas
-        $priorityClass = "secondary";
-
-        if($row['prioritas']=="High"){
-            $priorityClass="danger";
-        }elseif($row['prioritas']=="Medium"){
-            $priorityClass="warning";
-        }elseif($row['prioritas']=="Low"){
-            $priorityClass="success";
-        }
-
-        // Badge Status
-        $statusClass="secondary";
-
-        if($row['status']=="Open"){
-            $statusClass="danger";
-        }elseif($row['status']=="On Progress"){
-            $statusClass="primary";
-        }elseif($row['status']=="Waiting"){
-            $statusClass="warning";
-        }elseif($row['status']=="Closed"){
-            $statusClass="success";
-        }
-
-        echo "<tr>";
-
-        echo "<td>{$row['id']}</td>";
-        echo "<td>{$row['tipe']}</td>";
-        echo "<td>{$row['customer']}</td>";
-        echo "<td>{$row['area']}</td>";
-        echo "<td>{$row['sla']}</td>";
-        echo "<td>{$row['sisa_waktu']}</td>";
-
-        echo "<td><span class='badge bg-$priorityClass'>{$row['prioritas']}</span></td>";
-
-        echo "<td><span class='badge bg-$statusClass'>{$row['status']}</span></td>";
-
-   echo "<td>
-        <a href='inbox.php?id=".urlencode($row['id'])."' class='btn btn-sm btn-outline-primary'>
-            <i class='bi bi-eye'></i>
-        </a>
-      </td>";
-    }
-
-}else{
-
-    echo "<tr>";
-    echo "<td colspan='9' class='text-center'>Tidak ada data</td>";
-    echo "</tr>";
-
-}
-
-?>
-
-</tbody>
-
-                    </table>
-
-                </div>
-
-                <!-- Pagination -->
-
-                <div class="d-flex justify-content-between align-items-center mt-3">
-
-                    <small class="text-muted">
-
-                       <?php
-$from = ($totalData > 0) ? $start + 1 : 0;
-$to = ($totalData > 0) ? min($start + $limit, $totalData) : 0;
-?>
-
-<small class="text-muted">
-Menampilkan <?= $from ?> - <?= $to ?> dari <?= $totalData ?> Task
-</small>
-
-                    </small>
-
-                    <nav>
-
- <ul class="pagination mb-0">
-
-<!-- Previous -->
-<li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-    <a class="page-link" href="?page=<?= max(1,$page-1) ?>">
-        Previous
-    </a>
-</li>
-
-<?php
-
-$startPage = max(1, $page - 2);
-$endPage   = min($totalPage, $page + 2);
-
-if($startPage > 1){
-    echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
-
-    if($startPage > 2){
-        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-    }
-}
-
-for($i=$startPage; $i<=$endPage; $i++){
-?>
-
-<li class="page-item <?= ($i==$page)?'active':'' ?>">
-    <a class="page-link" href="?page=<?= $i ?>">
-        <?= $i ?>
-    </a>
-</li>
-
-<?php
-}
-
-if($endPage < $totalPage){
-
-    if($endPage < $totalPage-1){
-        echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-    }
-
-    echo '<li class="page-item"><a class="page-link" href="?page='.$totalPage.'">'.$totalPage.'</a></li>';
-}
-?>
-
-<!-- Next -->
-<li class="page-item <?= ($page >= $totalPage) ? 'disabled' : '' ?>">
-    <a class="page-link" href="?page=<?= min($totalPage,$page+1) ?>">
-        Next
-    </a>
-</li>
-
-</ul>
-
-                    </nav>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <br>
-
-        <!-- Detail Task -->
-        <div class="card shadow-sm border-0">
-
-            <div class="card-header bg-white">
-                <h5 class="mb-0 fw-bold">
-                    Detail Task
-                </h5>
-            </div>
-
-            <div class="card-body">
-
-                <div class="row">
-
-                    <!-- Informasi Task -->
-                    <div class="col-lg-6">
-
-                        <h6 class="fw-bold mb-3">
-                            Informasi Task
-                        </h6>
-
-                        <table class="table table-borderless">
-
-                            <tr>
-                                <th width="35%">ID Task</th>
-                               <td>: <?= $detail['id'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Tipe</th>
-                             <td>: <?= $detail['tipe'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Customer</th>
-                                <td>: <?= $detail['customer'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Area</th>
-                                <td>: <?= $detail['area'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Prioritas</th>
-                              <td>: <?= $detail['prioritas'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Status</th>
-                             <td>: <?= $detail['status'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>SLA</th>
-                                <td>: <?= $detail['sla'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Sisa Waktu</th>
-                                <td>: <?= $detail['sisa_waktu'] ?? '-' ?></td>
-                            </tr>
-
-                            <tr>
-                                <th>Dibuat</th>
-                                <td>: 21 Juli 2025 08:30</td>
-                            </tr>
-
+                            </tbody>
                         </table>
 
                     </div>
 
-                    <!-- Update Task -->
-                    <div class="col-lg-6">
+                    <!-- Pagination -->
 
-                        <h6 class="fw-bold mb-3">
-                            Update Task
-                        </h6>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
 
-                        <div class="mb-3">
+                        <small class="text-muted">
 
-                            <label class="form-label">
-                                Update Status
-                            </label>
+                          <small id="tableInfo"></small>
+                        </small>
+                        <nav>
+                            <ul class="pagination mb-0" id="pagination"></ul>
+                        </nav>
 
-                            <select class="form-select">
+                    </div>
 
-                                <option>Open</option>
+                </div>
 
-                                <option selected>
-                                    On Progress
-                                </option>
+            </div>
 
-                                <option>
-                                    Waiting
-                                </option>
+            <br>
 
-                                <option>
-                                    Closed
-                                </option>
+            <!-- Detail Task -->
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        Detail Task
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <!-- Informasi Task -->
+                        <div class="col-lg-6">
+
+                            <h6 class="fw-bold mb-3">
+                                Informasi Task
+                            </h6>
+
+                            <table class="table table-borderless">
+
+                                <tr>
+                                    <th width="35%">ID Task</th>
+                                   <td id="detail-id">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Tipe</th>
+                                 <td id="detail-tipe">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Customer</th>
+                                    <td id="detail-customer">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Area</th>
+                                    <td id="detail-area">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Prioritas</th>
+                                  <td id="detail-prioritas">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Status</th>
+                                 <td id="detail-status">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>SLA</th>
+                                    <td id="detail-sla">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Sisa Waktu</th>
+                                    <td id="detail-sisa-waktu">-</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Dibuat</th>
+                                    <td id="detail-dibuat">-</td>
+                                </tr>
+
+                            </table>
+
+                        </div>
+
+                        <!-- Update Task -->
+                        <div class="col-lg-6">
+                            <input type="hidden" id="selectedTaskId">
+                            <h6 class="fw-bold mb-3">
+                                Update Task
+                            </h6>
+
+                            <div class="mb-3">
+
+                                <label class="form-label">
+                                    Update Status
+                                </label>
+
+                             <select
+                                id="updateStatus"
+                                class="form-select">
+
+                                <option value="Open">Open</option>
+                                <option value="Issue">Issue</option>
+                                <option value="Closed">Closed</option>
 
                             </select>
 
-                        </div>
+                            </div>
 
-                        <div class="mb-3">
+                            <div class="mb-3">
 
-                            <label class="form-label">
-                                Catatan
-                            </label>
+                                <label class="form-label">
+                                    Catatan
+                                </label>
 
-                            <textarea
-                                class="form-control"
-                                rows="5"
-                                placeholder="Masukkan catatan update task..."></textarea>
+                              <textarea
+                              id="updateCatatan"
+                              class="form-control"
+                              rows="5"
+                              placeholder="Masukkan catatan..."></textarea>
 
-                        </div>
+                            </div>
 
-                        <div class="mb-4">
+                            <div class="mb-4">
 
-                            <label class="form-label">
-                                Upload Lampiran
-                            </label>
+                                <label class="form-label">
+                                    Upload Lampiran
+                                </label>
 
-                            <input
-                                type="file"
-                                class="form-control">
+                                <input
+                                    type="file"
+                                    id="updateLampiran"
+                                    class="form-control">
 
-                        </div>
+                                <small class="text-muted">Opsional. Maks. sekitar 5-10MB (batasan Apps Script/Drive).</small>
 
-                        <div class="text-end">
+                            </div>
 
-                            <button class="btn btn-secondary me-2">
+                            <div class="text-end">
 
-                                <i class="bi bi-x-circle"></i>
+                                <button type="button" id="btnBatal" class="btn btn-secondary me-2">
 
-                                Batal
+                                    <i class="bi bi-x-circle"></i>
 
-                            </button>
+                                    Batal
 
-                            <button class="btn btn-primary">
+                                </button>
+                                <button
+                                type="button"
+                                id="btnSimpan"
+                                class="btn btn-primary">
 
                                 <i class="bi bi-check-circle"></i>
-
                                 Simpan
 
-                            </button>
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -638,25 +464,575 @@ if($endPage < $totalPage){
 
         </div>
 
-        </div>
-
-        </div>
-
     </div>
 
-</div>
-        <script>
-            fetch('sidebar.html')
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    const links = document.querySelectorAll('.sidebar .nav-link');
-                    links.forEach(link => {
-                        if (link.href === window.location.href) {
-                            link.classList.add('active');
-                        }
-                    });
-                });
-        </script>
-    </body>
+    <!-- Toast notifikasi -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="appToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="appToastBody">-</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle (dibutuhkan untuk Toast) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+    fetch('sidebar.html')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('sidebar-container').innerHTML = html;
+            const links = document.querySelectorAll('.sidebar .nav-link');
+            links.forEach(link => {
+                if (link.href === window.location.href) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+    // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
+    // bukan langsung di sisi client, supaya tidak terekspos ke publik.
+    const API_URL = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
+
+    let allTasks = [];
+    let currentPage = 1;
+    const rowsPerPage = 5;
+
+    // ---- Helper: cegah XSS saat menampilkan data ke HTML ----
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return "";
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // ---- Helper: tampilkan notifikasi toast ----
+    function showToast(message, isError = false) {
+        const toastEl = document.getElementById("appToast");
+        const toastBody = document.getElementById("appToastBody");
+        toastBody.textContent = message;
+        toastEl.classList.remove("bg-success", "bg-danger");
+        toastEl.classList.add(isError ? "bg-danger" : "bg-success");
+        const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        toast.show();
+    }
+
+    // ---- Cache data ke localStorage supaya saat halaman dibuka lagi ----
+    // ---- data langsung tampil tanpa menunggu fetch ke server ----
+    const CACHE_KEY = "netops_inbox_task_cache";
+    const CACHE_MAX_AGE_MS = 5 * 60 * 1000; // anggap "segar" selama 5 menit
+
+    function saveCache(tasks) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+                tasks: tasks,
+                savedAt: Date.now()
+            }));
+        } catch (e) {
+            console.warn("Gagal menyimpan cache:", e);
+        }
+    }
+
+    function readCache() {
+        try {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return null;
+            return JSON.parse(raw);
+        } catch (e) {
+            console.warn("Gagal membaca cache:", e);
+            return null;
+        }
+    }
+
+    function clearCache() {
+        try {
+            localStorage.removeItem(CACHE_KEY);
+        } catch (e) { /* noop */ }
+    }
+
+    // Tampilkan data dari cache (kalau ada) secara instan, tanpa spinner
+    function renderFromCacheIfAvailable() {
+        const cached = readCache();
+        if (cached && Array.isArray(cached.tasks)) {
+            allTasks = cached.tasks;
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+
+            const ageMinutes = Math.round((Date.now() - cached.savedAt) / 60000);
+            document.getElementById("tableInfo").innerHTML +=
+                ` <span class="text-muted">(data cache, ${ageMinutes < 1 ? 'baru saja' : ageMinutes + ' menit lalu'})</span>`;
+
+            return true;
+        }
+        return false;
+    }
+
+    async function loadTasks(options = {}) {
+        const { silent = false, useCache = false } = options;
+
+        const keyword = document.getElementById("searchInput").value;
+        const status = document.getElementById("statusFilter").value;
+
+        // Filter Tipe, Prioritas, dan SLA saat ini dinonaktifkan untuk user,
+        // sehingga nilainya selalu dikirim kosong (tidak difilter) apapun
+        // isi elemen select-nya.
+        const tipe = "";
+        const prioritas = "";
+        const sla = "";
+
+        const isDefaultView = !keyword && !status;
+
+        const url =
+            API_URL +
+            "?search=" + encodeURIComponent(keyword) +
+            "&status=" + encodeURIComponent(status) +
+            "&tipe=" + encodeURIComponent(tipe) +
+            "&prioritas=" + encodeURIComponent(prioritas) +
+            "&sla=" + encodeURIComponent(sla);
+
+        hideLoadError();
+
+        // Kalau ini load pertama tanpa filter, coba tampilkan cache dulu
+        // supaya user tidak melihat tabel kosong/spinner saat buka halaman.
+        let shownFromCache = false;
+        if (useCache && isDefaultView) {
+            shownFromCache = renderFromCacheIfAvailable();
+        }
+
+        // Kalau tidak ada cache untuk ditampilkan, baru munculkan spinner.
+        // Kalau sudah ada data dari cache, fetch berjalan diam-diam di background.
+        if (!shownFromCache && !silent) {
+            setTableLoading();
+        }
+
+        try {
+            const res = await fetch(url);
+
+            // Ambil sebagai teks dulu, supaya kalau ternyata bukan JSON
+            // (mis. Apps Script mengembalikan halaman login/HTML karena
+            // deployment belum "Anyone can access"), kita bisa lihat isinya
+            // di console, bukan cuma error samar dari res.json().
+            const rawText = await res.text();
+
+            console.log("Status HTTP:", res.status);
+            console.log("Response mentah dari API:", rawText);
+
+            if (!res.ok) {
+                throw new Error("Server merespons dengan status " + res.status);
+            }
+
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseErr) {
+                throw new Error(
+                    "Response API bukan JSON yang valid. " +
+                    "Kemungkinan URL Apps Script salah, atau deployment-nya " +
+                    "belum diset 'Who has access: Anyone'. Cek tab Console/Network di browser."
+                );
+            }
+
+            // Dukung dua kemungkinan bentuk response:
+            // { tasks: [...] }  ATAU  [...] langsung
+            let tasks;
+            if (Array.isArray(data)) {
+                tasks = data;
+            } else if (Array.isArray(data.tasks)) {
+                tasks = data.tasks;
+            } else if (data.error) {
+                throw new Error("API mengembalikan error: " + data.error);
+            } else {
+                throw new Error(
+                    "Format data tidak dikenali. Field 'tasks' tidak ditemukan di response. " +
+                    "Cek Console (F12) untuk lihat response mentahnya."
+                );
+            }
+
+            allTasks = tasks;
+            currentPage = 1;
+
+            renderTable();
+            renderPagination();
+
+            // Simpan ke cache hanya untuk tampilan default (tanpa filter aktif)
+            if (isDefaultView) {
+                saveCache(tasks);
+            }
+
+        } catch (err) {
+            console.error("Gagal memuat data task:", err);
+
+            // Kalau ini silent refresh dan sebelumnya sudah ada data dari
+            // cache yang tampil, jangan kosongkan tabel — cukup beri tahu
+            // lewat banner bahwa data yang tampil mungkin sudah tidak terbaru.
+            if (shownFromCache) {
+                showLoadError(
+                    "Gagal memperbarui data terbaru dari server (" + err.message + "). " +
+                    "Data yang ditampilkan berasal dari cache sebelumnya."
+                );
+            } else {
+                allTasks = [];
+                renderTable();
+                renderPagination();
+                showLoadError(err.message);
+                showToast("Gagal memuat data task.", true);
+            }
+        }
+    }
+
+    function setTableLoading() {
+        const tbody = document.getElementById("taskTableBody");
+        tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Memuat data...
+        </td></tr>`;
+    }
+
+    function showLoadError(message) {
+        let banner = document.getElementById("loadErrorBanner");
+        if (!banner) {
+            banner = document.createElement("div");
+            banner.id = "loadErrorBanner";
+            banner.className = "alert alert-danger mt-3 mb-0";
+            document.getElementById("taskTable").closest(".card-body")
+                .insertBefore(banner, document.getElementById("taskTable").closest(".table-responsive"));
+        }
+        banner.textContent = "Gagal memuat data: " + message;
+        banner.style.display = "block";
+    }
+
+    function hideLoadError() {
+        const banner = document.getElementById("loadErrorBanner");
+        if (banner) banner.style.display = "none";
+    }
+
+    function renderTable() {
+
+        const tbody = document.getElementById("taskTableBody");
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+
+        const pageData = allTasks.slice(start, end);
+
+        if (pageData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4">Tidak ada data task.</td></tr>`;
+            document.getElementById("tableInfo").innerHTML = `Menampilkan 0 dari ${allTasks.length} data`;
+            return;
+        }
+
+        let html = "";
+
+        pageData.forEach((task, idx) => {
+
+            const globalIndex = start + idx;
+
+            html += `
+            <tr>
+                <td>${escapeHtml(task.id)}</td>
+                <td>${escapeHtml(task.tipe)}</td>
+                <td>${escapeHtml(task.customer)}</td>
+                <td>${escapeHtml(task.area)}</td>
+                <td>${escapeHtml(task.sla)}</td>
+                <td>${escapeHtml(task.sisa_waktu)}</td>
+                <td>${escapeHtml(task.prioritas)}</td>
+                <td>${escapeHtml(task.status)}</td>
+             <td>
+             <button 
+                class="btn btn-primary btn-sm"
+                type="button"
+                data-index="${globalIndex}"
+                onclick="showDetailByIndex(this)">
+                Detail
+             </button>
+             </td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = html;
+
+        document.getElementById("tableInfo").innerHTML =
+            `Menampilkan ${start + 1}-${Math.min(end, allTasks.length)} dari ${allTasks.length} data`;
+
+    }
+
+    // Ambil task dari allTasks berdasarkan index (lebih aman daripada
+    // menaruh seluruh object task di atribut onclick)
+    function showDetailByIndex(btn) {
+        const index = parseInt(btn.getAttribute("data-index"), 10);
+        const task = allTasks[index];
+        if (task) showDetail(task);
+    }
+
+    function showDetail(task) {
+
+        document.getElementById("detail-id").textContent = task.id ?? "-";
+        document.getElementById("detail-tipe").textContent = task.tipe ?? "-";
+        document.getElementById("detail-customer").textContent = task.customer ?? "-";
+        document.getElementById("detail-area").textContent = task.area ?? "-";
+        document.getElementById("detail-prioritas").textContent = task.prioritas ?? "-";
+        document.getElementById("detail-status").textContent = task.status ?? "-";
+        document.getElementById("detail-sla").textContent = task.sla ?? "-";
+        document.getElementById("detail-sisa-waktu").textContent = task.sisa_waktu ?? "-";
+        document.getElementById("detail-dibuat").textContent = task.dibuat ?? "-";
+
+        document.getElementById("selectedTaskId").value = task.id ?? "";
+
+        // Sinkronkan form update dengan status task yang dipilih
+        document.getElementById("updateStatus").value = task.status ?? "Open";
+        document.getElementById("updateCatatan").value = task.catatan ?? "";
+
+        const lampiran = document.getElementById("updateLampiran");
+        if (lampiran) lampiran.value = "";
+    }
+
+    // Hitung daftar nomor halaman yang ditampilkan, dengan "..." untuk
+    // bagian yang di-skip. Contoh hasil: [1,2,3,'...',12]
+    function getPageNumbers(current, total, siblingCount = 1) {
+
+        // Kalau halaman sedikit, tampilkan semua tanpa "..."
+        const totalVisible = siblingCount * 2 + 5; // first + last + current + 2 sibling + 2 ellipsis slot
+        if (total <= totalVisible) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+
+        const pages = [];
+
+        const leftSibling = Math.max(current - siblingCount, 1);
+        const rightSibling = Math.min(current + siblingCount, total);
+
+        const showLeftEllipsis = leftSibling > 2;
+        const showRightEllipsis = rightSibling < total - 1;
+
+        // Selalu tampilkan halaman pertama
+        pages.push(1);
+
+        if (showLeftEllipsis) {
+            pages.push('...');
+        } else {
+            for (let i = 2; i < leftSibling; i++) pages.push(i);
+        }
+
+        for (let i = leftSibling; i <= rightSibling; i++) {
+            if (i !== 1 && i !== total) pages.push(i);
+        }
+
+        if (showRightEllipsis) {
+            pages.push('...');
+        } else {
+            for (let i = rightSibling + 1; i < total; i++) pages.push(i);
+        }
+
+        // Selalu tampilkan halaman terakhir
+        pages.push(total);
+
+        return pages;
+    }
+
+    function renderPagination() {
+
+        const pagination = document.getElementById("pagination");
+
+        pagination.innerHTML = "";
+
+        const totalPage = Math.ceil(allTasks.length / rowsPerPage);
+
+        if (totalPage <= 1) return;
+
+        // Tombol "Prev"
+        pagination.innerHTML += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <button class="page-link" type="button" onclick="changePage(${currentPage - 1})">
+                &laquo;
+            </button>
+        </li>`;
+
+        const pageNumbers = getPageNumbers(currentPage, totalPage);
+
+        pageNumbers.forEach(p => {
+
+            if (p === '...') {
+                pagination.innerHTML += `
+                <li class="page-item disabled">
+                    <span class="page-link">&hellip;</span>
+                </li>`;
+            } else {
+                pagination.innerHTML += `
+                <li class="page-item ${p === currentPage ? 'active' : ''}">
+                    <button class="page-link" type="button" onclick="changePage(${p})">
+                        ${p}
+                    </button>
+                </li>`;
+            }
+
+        });
+
+        // Tombol "Next"
+        pagination.innerHTML += `
+        <li class="page-item ${currentPage === totalPage ? 'disabled' : ''}">
+            <button class="page-link" type="button" onclick="changePage(${currentPage + 1})">
+                &raquo;
+            </button>
+        </li>`;
+
+    }
+
+    function changePage(page) {
+
+        currentPage = page;
+
+        renderTable();
+        renderPagination();
+
+    }
+
+    // ---- Helper: convert File -> base64 (tanpa prefix "data:...;base64,") ----
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(",")[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ---- Simpan update task ke Apps Script / Google Sheet ----
+    async function saveTaskUpdate() {
+
+        const id = document.getElementById("selectedTaskId").value;
+
+        if (!id) {
+            showToast("Pilih task terlebih dahulu sebelum menyimpan.", true);
+            return;
+        }
+
+        const btnSimpan = document.getElementById("btnSimpan");
+        const originalText = btnSimpan.innerHTML;
+        btnSimpan.disabled = true;
+        btnSimpan.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...`;
+
+        try {
+
+            const payload = {
+                action: "update",
+                id: id,
+                status: document.getElementById("updateStatus").value,
+                catatan: document.getElementById("updateCatatan").value
+            };
+
+            // Lampiran opsional
+            const fileInput = document.getElementById("updateLampiran");
+            const file = fileInput && fileInput.files[0];
+
+            if (file) {
+                // Batasi ukuran file di sisi client supaya tidak gagal diam-diam
+                const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+                if (file.size > MAX_SIZE) {
+                    throw new Error("Ukuran file lampiran terlalu besar (maks. 8MB).");
+                }
+
+                const base64Data = await fileToBase64(file);
+                payload.lampiran = {
+                    data: base64Data,
+                    mimeType: file.type,
+                    fileName: file.name
+                };
+            }
+
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            });
+
+            const rawText = await res.text();
+
+            console.log("Status HTTP (update):", res.status);
+            console.log("Response mentah (update):", rawText);
+
+            if (!res.ok) {
+                throw new Error("Server merespons dengan status " + res.status);
+            }
+
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseErr) {
+                throw new Error(
+                    "Response bukan JSON yang valid. Cek Console/Network untuk detail."
+                );
+            }
+
+            if (!data.success) {
+                throw new Error(data.error || "Update ditolak oleh server.");
+            }
+
+            showToast("Task " + id + " berhasil diperbarui.");
+            clearCache();
+            await loadTasks();
+
+        } catch (err) {
+            console.error("Gagal menyimpan update task:", err);
+            showToast("Gagal menyimpan perubahan task: " + err.message, true);
+        } finally {
+            btnSimpan.disabled = false;
+            btnSimpan.innerHTML = originalText;
+        }
+    }
+
+    function resetDetailForm() {
+        document.getElementById("detail-id").textContent = "-";
+        document.getElementById("detail-tipe").textContent = "-";
+        document.getElementById("detail-customer").textContent = "-";
+        document.getElementById("detail-area").textContent = "-";
+        document.getElementById("detail-prioritas").textContent = "-";
+        document.getElementById("detail-status").textContent = "-";
+        document.getElementById("detail-sla").textContent = "-";
+        document.getElementById("detail-sisa-waktu").textContent = "-";
+        document.getElementById("detail-dibuat").textContent = "-";
+        document.getElementById("selectedTaskId").value = "";
+        document.getElementById("updateStatus").value = "Open";
+        document.getElementById("updateCatatan").value = "";
+        const lampiran = document.getElementById("updateLampiran");
+        if (lampiran) lampiran.value = "";
+    }
+
+    // ---- Event Listeners ----
+
+    document.getElementById("btnCari").addEventListener("click", () => loadTasks());
+
+    document.getElementById("btnFilter").addEventListener("click", () => loadTasks());
+
+    // Refresh = paksa ambil data terbaru dari server, hapus cache lama
+    document.getElementById("btnRefresh").addEventListener("click", () => {
+        clearCache();
+        loadTasks();
+    });
+
+    document.getElementById("btnSimpan").addEventListener("click", saveTaskUpdate);
+
+    document.getElementById("btnBatal").addEventListener("click", resetDetailForm);
+
+    // Cegah reload halaman kalau form filter di-submit lewat tombol Enter
+    document.getElementById("filterForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        loadTasks();
+    });
+
+    // Pertama kali halaman dibuka:
+    // 1) Tampilkan data dari cache secara instan (kalau ada dan tanpa filter aktif)
+    // 2) Tetap ambil data terbaru dari server di background untuk menyegarkan cache
+    window.onload = function () {
+        loadTasks({ useCache: true, silent: true });
+    };
+
+    </script>
+</body>
 </html>

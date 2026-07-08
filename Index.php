@@ -6,7 +6,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 <head>
-    <title>Dashboard Fulfillment</title>
+    <title>Dashboard Fulfillment - NETOPS</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -128,154 +128,111 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyJP0RhndjbMzwWW7rXumBBqsRDLGy4F2Ise630Z9jaSxzqmg_4AoBIBnQ4-w9YW8HUpw/exec";
-    const USER_ROLE = <?= json_encode($role) ?>; // MSO / MBB / SS / ED, dikirim dari session PHP
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxnU2vj6izC7fEfi_YKv497e5ffxYiuT2euTMlGc-yovWgWnLTJUWlcz3MtStZ_Z81r2A/exec";
 
     let priorityDataTable = null;
     let onAirDataTable = null;
     let pieChartInstance = null;
     let barChartInstance = null;
 
-    function statusBadge(status) {
-        const s = (status || '').toLowerCase();
-        let cls = 'bg-secondary';
-        if (s === 'open') cls = 'bg-danger';
-        else if (s === 'issue') cls = 'bg-warning text-dark';
-        else if (s === 'closed') cls = 'bg-success';
-        return `<span class="badge ${cls}">${status || '-'}</span>`;
-    }
-
     async function loadDashboardData() {
         try {
-            const url = `${GAS_URL}?role=${encodeURIComponent(USER_ROLE)}`;
-            const res = await fetch(url);
+            const res = await fetch(GAS_URL);
+            const response = await res.json();
 
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status} - cek deploy Apps Script (Who has access: Anyone)`);
+            if (response.success) {
+                renderSummaryCards(response);
+                renderPriorityTable(response.tasks || []);
+                renderOnAirTable(response.onAir || []);
+                renderCharts(response.task_by_program || {}, response.task_by_region || {});
             }
-
-            const raw = await res.text();
-            let response;
-            try {
-                response = JSON.parse(raw);
-            } catch (parseErr) {
-                console.error("Response bukan JSON, isinya:", raw.slice(0, 300));
-                throw new Error("Response dari Apps Script bukan JSON. Cek URL deploy / permission-nya.");
-            }
-
-            console.log("Data diterima:", response);
-
-            if (!response.success) {
-                throw new Error(response.message || "Gagal mengambil data.");
-            }
-
-            renderSummaryCards(response);
-            renderPriorityTable(response.priority_order || []);
-            renderCharts(response.task_by_program || {}, response.task_by_region || {});
-            renderOnAirTable(response.on_air || []);
-
         } catch (err) {
-            console.error("Error loadDashboardData:", err);
-            const tbody = document.querySelector('#priorityTable tbody');
-            if (tbody) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger py-3">
-                    Gagal memuat data: ${err.message}
-                </td></tr>`;
-            }
+            console.error("Gagal memuat data:", err);
         }
     }
 
-    function renderSummaryCards(response) {
-        document.getElementById('totalTask').textContent = response.total ?? 0;
-        document.getElementById('openTask').textContent = response.open ?? 0;
-        document.getElementById('issueTask').textContent = response.issue ?? 0;
-        document.getElementById('confirmTask').textContent = response.confirm ?? 0;
+    function renderSummaryCards(r) {
+        document.getElementById('totalTask').textContent = r.total ?? 0;
+        document.getElementById('openTask').textContent = r.open ?? 0;
+        document.getElementById('issueTask').textContent = r.issue ?? 0;
+        document.getElementById('confirmTask').textContent = r.confirm ?? 0;
     }
 
     function renderPriorityTable(rows) {
-        if (priorityDataTable) {
-            priorityDataTable.destroy();
-            document.querySelector('#priorityTable').innerHTML = '<thead></thead><tbody></tbody>';
-        }
+        if (priorityDataTable) priorityDataTable.destroy();
 
         priorityDataTable = new DataTable('#priorityTable', {
             data: rows,
+            pageLength: 25,
+            scrollX: true,
+            searching: true,
+            ordering: true,
             columns: [
-                { title: 'No', data: null, render: (d, t, r, meta) => meta.row + 1, orderable: false },
-                { title: 'Uniq', data: 'uniq', defaultContent: '-' },
-                { title: 'TTD', data: 'ttd', defaultContent: '-', render: d => d === null ? '-' : `${d} hari` },
-                { title: 'Site ID', data: 'id', defaultContent: '-' },
-                { title: 'Site Name', data: 'site_name', defaultContent: '-' },
-                { title: 'Status Deploy', data: 'status_deploy', defaultContent: '-' },
-                { title: 'Sow Order', data: 'sow_order', defaultContent: '-' },
-                { title: 'Mitra Final', data: 'mitra_final', defaultContent: '-' },
-                { title: 'Milestone', data: 'milestone', defaultContent: '-' },
-                { title: 'Status Final TIF', data: 'status', defaultContent: '-', render: d => statusBadge(d) }
-            ],
+                { title: 'No', data: null, render: (d, t, r, meta) => meta.row + 1 },
+                { title: 'ID Task', data: 'id', defaultContent: '-' },
+                { title: 'Tipe', data: 'tipe', defaultContent: '-' },
+                { title: 'Customer', data: 'customer', defaultContent: '-' },
+                { title: 'Area', data: 'area', defaultContent: '-' },
+                { title: 'Status', data: 'status', defaultContent: '-' }
+            ]
+        });
+    }
+
+    function renderOnAirTable(rows) {
+        if (onAirDataTable) onAirDataTable.destroy();
+
+        onAirDataTable = new DataTable('#onAirTable', {
+            data: rows,
             pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
-            order: [[2, 'desc']], // urut TTD terbesar dulu
-            language: {
-                search: "Cari:",
-                lengthMenu: "_MENU_ entries per page",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                paginate: { previous: "Sebelumnya", next: "Berikutnya" },
-                zeroRecords: "Tidak ada data yang cocok"
-            }
+            scrollX: true,
+            columns: [
+                { title: 'Tanggal On Air', data: 'tanggal' },
+                { title: 'Site Name', data: 'siteName' },
+                { title: 'NIM', data: 'nim' },
+                { title: 'Program', data: 'program' }
+            ]
         });
     }
 
     function renderCharts(byProgram, byRegion) {
-        if (pieChartInstance) pieChartInstance.destroy();
+        if (pieChartInstance) { pieChartInstance.destroy(); pieChartInstance = null; }
+        if (barChartInstance) { barChartInstance.destroy(); barChartInstance = null; }
+
+        // Pie Chart
         pieChartInstance = new Chart(document.getElementById('pieChart'), {
             type: 'doughnut',
             data: {
                 labels: Object.keys(byProgram),
-                datasets: [{ data: Object.values(byProgram) }]
+                datasets: [{
+                    data: Object.values(byProgram),
+                    backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#22c55e', '#8b5cf6', '#ec4899']
+                }]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        if (barChartInstance) barChartInstance.destroy();
+        // Bar Chart
         barChartInstance = new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {
                 labels: Object.keys(byRegion),
-                datasets: [{ label: 'Open Task', data: Object.values(byRegion) }]
+                datasets: [{
+                    label: 'Task Open',
+                    data: Object.values(byRegion),
+                    backgroundColor: '#3b82f6'
+                }]
             },
-            options: {
-                responsive: true,
+            options: { 
+                responsive: true, 
                 maintainAspectRatio: false,
                 scales: { y: { beginAtZero: true } }
             }
         });
     }
 
-    function renderOnAirTable(rows) {
-        if (onAirDataTable) {
-            onAirDataTable.destroy();
-            document.querySelector('#onAirTable').innerHTML = '<thead></thead><tbody></tbody>';
-        }
-
-        onAirDataTable = new DataTable('#onAirTable', {
-            data: rows,
-            columns: [
-                { title: 'Tanggal On Air', data: 'oa_date', defaultContent: '-' },
-                { title: 'Site ID', data: 'id', defaultContent: '-' },
-                { title: 'NIM', data: 'nim', defaultContent: '-' },
-                { title: 'Site Name', data: 'site_name', defaultContent: '-' },
-                { title: 'Program', data: 'tipe', defaultContent: '-' }
-            ],
-            paging: false,
-            searching: false,
-            info: false,
-            order: []
-        });
-    }
-
     window.onload = loadDashboardData;
 
-    // Sidebar
+    // Load Sidebar
     fetch('sidebar.html').then(res => res.text()).then(html => {
         document.getElementById('sidebar-container').innerHTML = html;
     });
