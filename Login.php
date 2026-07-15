@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 
 if (isset($_SESSION['username'])) {
@@ -13,43 +16,57 @@ if (isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $url = "https://script.google.com/macros/s/AKfycbwYIkZB84QURA54m4IqhmKsRhm5Uq6v4NZykrrRRqAmU2TsvsPhSbE4Ixem1subUyUQqQ/exec";
+    $url = "https://script.google.com/macros/s/AKfycbzB026p6CF6Eitn3HGrsRGh9sEa3ph8jv0yq6Ei8eiPS1oBT96ZcDMPzAQbV_nH8fm-FA/exec";
 
     $postData = http_build_query([
         "username" => $username,
         "password" => $password
     ]);
 
-    $options = [
-        "http" => [
-            "header"  => "Content-Type: application/x-www-form-urlencoded",
-            "method"  => "POST",
-            "content" => $postData,
-            "timeout" => 30
-        ]
-    ];
+    // Menggunakan cURL (lebih andal daripada file_get_contents untuk POST
+    // ke Google Apps Script, terutama terkait penanganan redirect & SSL
+    // yang sering gagal diam-diam di beberapa hosting).
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $postData,
+        CURLOPT_HTTPHEADER     => ["Content-Type: application/x-www-form-urlencoded"],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
 
-    $context = stream_context_create($options);
-    $response = @file_get_contents($url, false, $context);
+    $response  = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-    if ($response !== false) {
-
+    if ($response === false) {
+        // Request ke Apps Script gagal total (jaringan/SSL/timeout)
+        error_log("Login GAS request error: " . $curlError);
+        $error = "Tidak dapat menghubungi server autentikasi. Coba lagi.";
+    } else {
         $result = json_decode($response, true);
 
         if (!empty($result['success'])) {
-
             $_SESSION['username'] = $result['username'];
-            $_SESSION['email']    = $result['email'];
             $_SESSION['nama']     = $result['nama'];
-            $_SESSION['loker']    = $result['loker'];
-            $_SESSION['role']     = $result['role'];
+            $_SESSION['role']     = $result['role'] ?? 'user';
+            $_SESSION['loker']    = $result['loker'] ?? '';
 
             header("Location: index.php");
             exit;
         }
-    }
 
-    $error = "Username atau Password salah.";
+        // Log respons mentah bila format tidak sesuai dugaan (misal HTML
+        // halaman error Google, bukan JSON) agar mudah didiagnosis.
+        if ($result === null) {
+            error_log("Login GAS returned non-JSON (HTTP $httpCode): " . substr($response, 0, 500));
+        }
+
+        $error = "Username atau Password salah.";
+    }
 }
 ?>
 
