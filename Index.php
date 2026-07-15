@@ -1,239 +1,256 @@
+<?php
+require_once 'auth.php';
+$role = strtoupper($_SESSION['role'] ?? '');
+?>
+
 <!doctype html>
 <html lang="en" data-bs-theme="light">
-    <head>
-        <title>Dashboard Fulfillment</title>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-        <link rel="stylesheet" href="style.css">
-    </head>
- 
-    <body>
-        <div class="d-flex">
- 
-            <!-- Sidebar -->
-            <div id="sidebar-container"></div>
- 
-            <!-- Content -->
-            <div class="content flex-grow-1">
- 
-                <!-- Navbar -->
-                <nav class="navbar bg-white shadow-sm px-4">
-                    <span class="navbar-brand">Summary</span>
-                    <div class="ms-auto d-flex align-items-center">
-                        <i class="bi bi-bell fs-5 me-4"></i>
-                        <img src="https://i.pravatar.cc/40" class="rounded-circle me-2">
-                        <span>Andy Pratama</span>
-                    </div>
-                </nav>
- 
-                <!-- Main Content -->
-                <div class="container-fluid p-4">
- 
-                    <h3>Selamat pagi, User</h3>
- 
-                   <!-- Summary Cards -->
-                   <div class="row g-3 mt-3">
+<head>
+    <title>Dashboard Fulfillment - NETOPS</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="style.css">
 
-                        <?php
-                        // Fungsi untuk mengambil data dari Google Apps Script
-                        function getDashboardData() {
-                            $url = "https://script.google.com/macros/s/AKfycbyXNXBuvTJS3fnnCe-CB0DSdUbQafPGym8y8zeqpFku8WMYg6gbL5it91PwHMVdxvHMKg/exec";
-                            $json = @file_get_contents($url);
-                            
-                            if ($json === false) {
-                                return [
-                                    'total' => 'Error',
-                                    'open' => 'Error',
-                                    'progress' => 'Error',
-                                    'closed' => 'Error'
-                                ];
-                            }
-                            $data = json_decode($json, true);
-                            return [
-                                'total'    => $data['total'] ?? 0,
-                                'open'     => $data['open'] ?? 0,
-                                'progress' => $data['progress'] ?? 0,
-                                'closed'   => $data['closed'] ?? 0
-                            ];
-                        }
-                        $data = getDashboardData();
-                        ?>
-                        
-                        <!-- Total Task -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h6 class="text-muted">Total Task</h6>
-                                    <h2 class="text-primary"><?= $data['total'] ?></h2>
-                                </div>
-                            </div>
-                        </div>
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.8/js/dataTables.js"></script>
+</head>
+<body>
+    <div class="d-flex">
+        <div id="sidebar-container"></div>
 
-                        <!-- Open Task -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h6 class="text-muted">Open Task</h6>
-                                    <h2 class="text-danger"><?= $data['open'] ?></h2>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- On Progress -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h6 class="text-muted">On Progress</h6>
-                                    <h2 class="text-warning"><?= $data['progress'] ?></h2>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Closed -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-body">
-                                    <h6 class="text-muted">Closed</h6>
-                                    <h2 class="text-success"><?= $data['closed'] ?></h2>
-                                </div>
-                            </div>
-                        </div>
- 
-                    <!-- Priority Alert -->
-                    <div class="card shadow-sm mt-4">
-                        <div class="card-header">
-                            Priority Alert
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>ID Task</th>
-                                            <th>Tipe</th>
-                                            <th>Customer</th>
-                                            <th>Area</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>T-1245</td>
-                                            <td>Gangguan</td>
-                                            <td>PT ABC</td>
-                                            <td>JKT</td>
-                                            <td><span class="badge bg-danger">OPEN</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>T-1248</td>
-                                            <td>Instalasi</td>
-                                            <td>CV Sukses</td>
-                                            <td>BKS</td>
-                                            <td><span class="badge bg-success">CLOSED</span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+        <div class="content flex-grow-1">
+            <!-- Navbar -->
+            <nav class="navbar bg-white shadow-sm px-4 py-3">
+                <span class="navbar-brand fw-bold fs-4">Summary</span>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <i class="bi bi-bell fs-5"></i>
+                    <img src="https://i.pravatar.cc/40" class="rounded-circle" width="38" height="38">
+                    <div>
+                        <div class="fw-semibold small"><?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></div>
+                        <small class="text-muted"><?= htmlspecialchars($_SESSION['role'] ?? '') ?></small>
                     </div>
- 
-                    <!-- Charts -->
-                    <div class="row mt-4">
-                        <div class="col-lg-6 mb-4">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header fw-bold">Task by Status</div>
-                                <div class="card-body">
-                                    <canvas id="statusChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <div class="card shadow-sm h-100">
-                                <div class="card-header fw-bold">Task by Area</div>
-                                <div class="card-body">
-                                    <canvas id="areaChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
- 
-                    <!-- Recent Activity -->
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">Recent Activity</span>
-                            <a href="#" class="text-decoration-none">Lihat semua</a>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <tbody>
-                                    <tr>
-                                        <td width="80">10:12</td>
-                                        <td>Task T-1245 assigned to Andi Pratama</td>
-                                        <td class="text-end"><span class="badge bg-primary">NEW</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>09:55</td>
-                                        <td>Task T-1239 closed by Andi Pratama</td>
-                                        <td class="text-end"><span class="badge bg-success">CLOSED</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>09:30</td>
-                                        <td>New task T-1250 created from BOT Telegram</td>
-                                        <td class="text-end"><span class="badge bg-primary">NEW</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>09:12</td>
-                                        <td>Task T-1242 status changed to On Progress</td>
-                                        <td class="text-end"><span class="badge bg-info">UPDATE</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>08:45</td>
-                                        <td>Task T-1238 closed by Budi Santoso</td>
-                                        <td class="text-end"><span class="badge bg-success">CLOSED</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
- 
+                    <a href="logout.php" class="btn btn-outline-danger btn-sm" onclick="return confirm('Yakin ingin logout?')">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
                 </div>
-                <!-- End Main Content -->
- 
+            </nav>
+
+            <div class="container-fluid p-4">
+                <h3>Selamat pagi, <?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></h3>
+
+                <!-- Summary Cards -->
+                <div class="row g-3 mt-3">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Task</h6>
+                                <h2 class="text-primary" id="totalTask">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Open Task</h6>
+                                <h2 class="text-danger" id="openTask">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Issue</h6>
+                                <h2 class="text-warning" id="issueTask">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="text-muted">Confirmation</h6>
+                                <h2 class="text-success" id="confirmTask">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Order -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header fw-bold">Priority Order &gt; 20 Hari</div>
+                    <div class="card-body">
+                        <table id="priorityTable" class="table table-hover align-middle" style="width:100%">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="row mt-4">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header fw-bold">Task Open by Program</div>
+                            <div class="card-body">
+                                <canvas id="pieChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header fw-bold">Task Open by Regional</div>
+                            <div class="card-body">
+                                <canvas id="barChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Site On Air -->
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header fw-bold">New Site On Air</div>
+                    <div class="card-body">
+                        <table id="onAirTable" class="table table-hover" style="width:100%">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <!-- End Content -->
- 
         </div>
-        <!-- End d-flex -->
-        <header>
-            <!-- place navbar here -->
-        </header>
-        <footer>
-            <!-- place footer here -->
-        </footer>
-        <!-- Bootstrap JavaScript Bundle (includes Popper) -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-            crossorigin="anonymous"
-        ></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="script.js"></script>
-        <script>
-            fetch('sidebar.php')
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('sidebar-container').innerHTML = html;
-                    // Auto-highlight link yang aktif
-                    const links = document.querySelectorAll('.sidebar .nav-link');
-                    links.forEach(link => {
-                        if (link.href === window.location.href) {
-                            link.classList.add('active');
-                        }
-                    });
-                });
-        </script>
-    </body>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwzkNx5yJ78nSmoPEOUE200Osm3wKQiy2gn4kY1xrodRXKFKrbV8UIuP8Z_pChnb-PdPg/exec";
+
+    let priorityDataTable = null;
+    let onAirDataTable = null;
+    let pieChartInstance = null;
+    let barChartInstance = null;
+
+    async function loadDashboardData() {
+        try {
+            const res = await fetch(GAS_URL);
+            const response = await res.json();
+
+            if (response.success) {
+                renderSummaryCards(response);
+                renderPriorityTable(response.tasks || []);
+                renderOnAirTable(response.onAir || []);
+                renderCharts(response.task_by_program || {}, response.task_by_region || {});
+            }
+        } catch (err) {
+            console.error("Gagal memuat data:", err);
+        }
+    }
+
+    function renderSummaryCards(r) {
+        document.getElementById('totalTask').textContent = r.total ?? 0;
+        document.getElementById('openTask').textContent = r.open ?? 0;
+        document.getElementById('issueTask').textContent = r.issue ?? 0;
+        document.getElementById('confirmTask').textContent = r.confirm ?? 0;
+    }
+
+    // Semua data (rows) tetap dikirim sekali dari server (semua data di
+    // database, bukan sepotong-sepotong) dan disimpan penuh di memory
+    // browser lewat DataTable's `data: rows`. Ganti halaman / ganti jumlah
+    // baris per halaman di bawah ini SEPENUHNYA di sisi browser (client-side)
+    // -> tidak ada fetch ulang ke server sama sekali.
+    function renderPriorityTable(rows) {
+        if (priorityDataTable) priorityDataTable.destroy();
+
+        priorityDataTable = new DataTable('#priorityTable', {
+            data: rows,
+            paging: true,
+            pageLength: 10,                          // default jumlah baris per halaman
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']], // dropdown pilihan
+            pagingType: 'simple_numbers',             // otomatis jadi "..." kalau halaman banyak
+            scrollX: true,
+            searching: true,
+            ordering: true,
+            info: true,
+            columns: [
+                { title: 'No', data: null, render: (d, t, r, meta) => meta.row + 1 },
+                { title: 'ID Task', data: 'id', defaultContent: '-' },
+                { title: 'Tipe', data: 'tipe', defaultContent: '-' },
+                { title: 'Customer', data: 'customer', defaultContent: '-' },
+                { title: 'Area', data: 'area', defaultContent: '-' },
+                { title: 'Status', data: 'status', defaultContent: '-' }
+            ]
+        });
+    }
+
+    function renderOnAirTable(rows) {
+        if (onAirDataTable) onAirDataTable.destroy();
+
+        onAirDataTable = new DataTable('#onAirTable', {
+            data: rows,
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
+            pagingType: 'simple_numbers',
+            scrollX: true,
+            searching: true,
+            ordering: true,
+            info: true,
+            columns: [
+                { title: 'Tanggal On Air', data: 'tanggal' },
+                { title: 'Site Name', data: 'siteName' },
+                { title: 'NIM', data: 'nim' },
+                { title: 'Program', data: 'program' }
+            ]
+        });
+    }
+
+    function renderCharts(byProgram, byRegion) {
+        if (pieChartInstance) { pieChartInstance.destroy(); pieChartInstance = null; }
+        if (barChartInstance) { barChartInstance.destroy(); barChartInstance = null; }
+
+        // Pie Chart
+        pieChartInstance = new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(byProgram),
+                datasets: [{
+                    data: Object.values(byProgram),
+                    backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#22c55e', '#8b5cf6', '#ec4899']
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Bar Chart
+        barChartInstance = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(byRegion),
+                datasets: [{
+                    label: 'Task Open',
+                    data: Object.values(byRegion),
+                    backgroundColor: '#3b82f6'
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    window.onload = loadDashboardData;
+
+    // Load Sidebar
+    fetch('sidebar.html').then(res => res.text()).then(html => {
+        document.getElementById('sidebar-container').innerHTML = html;
+    });
+    </script>
+</body>
 </html>
