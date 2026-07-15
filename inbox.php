@@ -495,7 +495,7 @@ require_once 'auth.php';
 
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLUKqNhqqgVtnLD-o_lhKc1dHQKjo1ZGRtNgIH1ak4kVZ8_8FaB_vVmnaIJK72e7S91Q/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
 
     let allTasks = [];
     let currentPage = 1;
