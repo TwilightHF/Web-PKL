@@ -495,11 +495,11 @@ require_once 'auth.php';
 
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "https://script.google.com/macros/s/AKfycbwd0KS3yqXh152ifNHNYpNLLjDqrQDyS30Yta5LkrEUkJwuNENbpFHKA0M-9NKJjbqzwQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwzkNx5yJ78nSmoPEOUE200Osm3wKQiy2gn4kY1xrodRXKFKrbV8UIuP8Z_pChnb-PdPg/exec";
 
     let allTasks = [];
     let currentPage = 1;
-    const rowsPerPage = 5;
+    const rowsPerPage = 10;
 
     // ---- Helper: cegah XSS saat menampilkan data ke HTML ----
     function escapeHtml(value) {
