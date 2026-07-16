@@ -523,18 +523,6 @@ require_once 'auth.php';
         toast.show();
     }
 
-    // ---- Ubah error fetch generik jadi pesan yang lebih jelas untuk user ----
-    // "Failed to fetch" biasanya berarti: CORS diblokir, deployment Apps Script
-    // belum "Anyone" bisa akses, atau deployment belum di-redeploy versi terbaru.
-    function explainFetchError(err) {
-        if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
-            return "Tidak bisa menghubungi server (kemungkinan deployment Apps Script " +
-                   "belum di-redeploy versi terbaru, atau akses belum diset 'Anyone'). " +
-                   "Cek tab Console (F12) untuk detail CORS.";
-        }
-        return err.message;
-    }
-
     // ---- Cache data ke localStorage supaya saat halaman dibuka lagi ----
     // ---- data langsung tampil tanpa menunggu fetch ke server ----
     const CACHE_KEY = "netops_inbox_task_cache";
@@ -681,21 +669,19 @@ require_once 'auth.php';
         } catch (err) {
             console.error("Gagal memuat data task:", err);
 
-            const friendlyMessage = explainFetchError(err);
-
             // Kalau ini silent refresh dan sebelumnya sudah ada data dari
             // cache yang tampil, jangan kosongkan tabel — cukup beri tahu
             // lewat banner bahwa data yang tampil mungkin sudah tidak terbaru.
             if (shownFromCache) {
                 showLoadError(
-                    "Gagal memperbarui data terbaru dari server (" + friendlyMessage + "). " +
+                    "Gagal memperbarui data terbaru dari server (" + err.message + "). " +
                     "Data yang ditampilkan berasal dari cache sebelumnya."
                 );
             } else {
                 allTasks = [];
                 renderTable();
                 renderPagination();
-                showLoadError(friendlyMessage);
+                showLoadError(err.message);
                 showToast("Gagal memuat data task.", true);
             }
         }
@@ -960,10 +946,6 @@ require_once 'auth.php';
                 };
             }
 
-            // PENTING: Content-Type text/plain (bukan application/json) supaya
-            // browser TIDAK mengirim CORS preflight (OPTIONS) yang tidak bisa
-            // dijawab oleh Google Apps Script. Ini kunci utama menghindari
-            // error "Failed to fetch" saat POST ke Apps Script.
             const res = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -998,8 +980,7 @@ require_once 'auth.php';
 
         } catch (err) {
             console.error("Gagal menyimpan update task:", err);
-            const friendlyMessage = explainFetchError(err);
-            showToast("Gagal menyimpan perubahan task: " + friendlyMessage, true);
+            showToast("Gagal menyimpan perubahan task: " + err.message, true);
         } finally {
             btnSimpan.disabled = false;
             btnSimpan.innerHTML = originalText;
