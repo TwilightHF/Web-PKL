@@ -13,59 +13,90 @@ $error = "";
 
 if (isset($_POST['login'])) {
 
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
+    // STEP 6: validasi input, jangan langsung percaya $_POST ada isinya
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
 
-    $url = "https://script.google.com/macros/s/AKfycbzB026p6CF6Eitn3HGrsRGh9sEa3ph8jv0yq6Ei8eiPS1oBT96ZcDMPzAQbV_nH8fm-FA/exec";
+    if ($username === '' || $password === '') {
 
-    $postData = http_build_query([
-        "username" => $username,
-        "password" => $password
-    ]);
+        $error = "Username dan password wajib diisi.";
 
-    // Menggunakan cURL (lebih andal daripada file_get_contents untuk POST
-    // ke Google Apps Script, terutama terkait penanganan redirect & SSL
-    // yang sering gagal diam-diam di beberapa hosting).
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => $postData,
-        CURLOPT_HTTPHEADER     => ["Content-Type: application/x-www-form-urlencoded"],
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_TIMEOUT        => 30,
-        CURLOPT_SSL_VERIFYPEER => true,
-    ]);
-
-    $response  = curl_exec($ch);
-    $curlError = curl_error($ch);
-    $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($response === false) {
-        // Request ke Apps Script gagal total (jaringan/SSL/timeout)
-        error_log("Login GAS request error: " . $curlError);
-        $error = "Tidak dapat menghubungi server autentikasi. Coba lagi.";
     } else {
-        $result = json_decode($response, true);
 
-        if (!empty($result['success'])) {
-            $_SESSION['username'] = $result['username'];
-            $_SESSION['nama']     = $result['nama'];
-            $_SESSION['role']     = $result['role'] ?? 'user';
-            $_SESSION['loker']    = $result['loker'] ?? '';
+        $url = "https://script.google.com/macros/s/AKfycbxAZTqbo-Clir4cemPgYiC4hWYQUumHGMbnxS8OUevw2TyxxiF_t3Qyw5Q56hWa2Eq1uQ/exec";
 
-            header("Location: index.php");
-            exit;
+        // STEP 2: sertakan action=login secara eksplisit, supaya Apps Script
+        // tidak perlu menebak jenis request dari format body-nya.
+        $postData = http_build_query([
+            "action"   => "login",
+            "username" => $username,
+            "password" => $password
+        ]);
+
+        // Menggunakan cURL (lebih andal daripada file_get_contents untuk POST
+        // ke Google Apps Script, terutama terkait penanganan redirect & SSL
+        // yang sering gagal diam-diam di beberapa hosting).
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $postData,
+            CURLOPT_HTTPHEADER     => ["Content-Type: application/x-www-form-urlencoded"],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_SSL_VERIFYPEER => true,
+        ]);
+
+        $response  = curl_exec($ch);
+        $curlError = curl_error($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false) {
+            // Request ke Apps Script gagal total (jaringan/SSL/timeout)
+            error_log("Login GAS request error: " . $curlError);
+            $error = "Tidak dapat menghubungi server autentikasi. Coba lagi.";
+
+        } elseif ($httpCode !== 200) {
+            // STEP 3: request sampai ke server tapi HTTP status bukan 200
+            // (mis. 302 karena deployment belum "Anyone can access", 403, 500, dst).
+            // Sebelumnya kasus ini lolos begitu saja ke json_decode() dan berakhir
+            // sebagai "Username atau Password salah" yang menyesatkan.
+            error_log("Login GAS HTTP error ($httpCode): " . substr($response, 0, 500));
+            $error = "Server autentikasi sedang bermasalah (HTTP $httpCode). Coba lagi nanti.";
+
+        } else {
+            $result = json_decode($response, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // STEP 4: null dari json_decode() bisa juga berarti response memang
+                // literal string "null", bukan cuma "bukan JSON". json_last_error()
+                // memastikan ini benar-benar kegagalan parsing JSON.
+                error_log("Login GAS JSON error: " . json_last_error_msg() . " | Response: " . substr($response, 0, 500));
+                $error = "Server autentikasi mengembalikan respons tidak valid. Coba lagi.";
+
+            } elseif (!empty($result['success'])) {
+
+                // STEP 5: regenerasi session ID setelah login berhasil,
+                // untuk mencegah session fixation.
+                session_regenerate_id(true);
+
+                $_SESSION['username'] = $result['username'];
+                $_SESSION['nama']     = $result['nama'];
+                $_SESSION['role']     = $result['role'] ?? 'user';
+                $_SESSION['loker']    = $result['loker'] ?? '';
+
+                header("Location: index.php");
+                exit;
+
+            } elseif (!empty($result['error'])) {
+                // Tampilkan error asli dari Apps Script (mis. "Sheet tidak ditemukan"),
+                // bukan selalu ditimpa jadi "Username atau Password salah".
+                $error = $result['error'];
+            } else {
+                $error = "Username atau Password salah.";
+            }
         }
-
-        // Log respons mentah bila format tidak sesuai dugaan (misal HTML
-        // halaman error Google, bukan JSON) agar mudah didiagnosis.
-        if ($result === null) {
-            error_log("Login GAS returned non-JSON (HTTP $httpCode): " . substr($response, 0, 500));
-        }
-
-        $error = "Username atau Password salah.";
     }
 }
 ?>
@@ -108,10 +139,10 @@ if (isset($_POST['login'])) {
 
             <form method="POST">
                 <div class="mb-3">
-                    <input type="text" name="username" class="form-control" placeholder="Username (admin)" required>
+                    <input type="text" name="username" class="form-control" placeholder="Username" required>
                 </div>
                 <div class="mb-4">
-                    <input type="password" name="password" class="form-control" placeholder="Password (admin123)" required>
+                    <input type="password" name="password" class="form-control" placeholder="Password" required>
                 </div>
                 <button type="submit" name="login" class="btn btn-primary login-btn">
                     LOGIN
