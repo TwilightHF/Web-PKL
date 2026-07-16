@@ -128,7 +128,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxnU2vj6izC7fEfi_YKv497e5ffxYiuT2euTMlGc-yovWgWnLTJUWlcz3MtStZ_Z81r2A/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyO0UdsBkZdCyHXJZS3uGgxsGB9m-eWDWnrM3-hWSBeJqE6NsCoQrFM9yagbbRdQkmOgw/exec";
 
     let priorityDataTable = null;
     let onAirDataTable = null;
@@ -163,7 +163,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
         priorityDataTable = new DataTable('#priorityTable', {
             data: rows,
-            pageLength: 25,
+            pageLength: 10,
             scrollX: true,
             searching: true,
             ordering: true,
