@@ -157,54 +157,49 @@ require_once 'auth.php';
 
                             </div>
 
-                            <!-- Tipe (dinonaktifkan) -->
+                            <!-- Tipe -->
                             <div class="col-lg-2">
 
                                 <label class="form-label fw-semibold">
                                     Tipe
                                 </label>
 
-                                <select class="form-select" name="tipe" id="tipeFilter" disabled>
+                                <select class="form-select" name="tipe" id="tipeFilter">
 
                                     <option value="">Semua Tipe</option>
-                                    <option value="Incident">Incident</option>
-                                    <option value="Request">Request</option>
-                                    <option value="Maintenance">Maintenance</option>
+                                    <!-- Opsi diisi otomatis lewat JS dari data yang sudah dimuat -->
 
                                 </select>
 
                             </div>
 
-                            <!-- Prioritas (dinonaktifkan) -->
+                            <!-- Prioritas -->
                             <div class="col-lg-2">
 
                                 <label class="form-label fw-semibold">
                                     Prioritas
                                 </label>
 
-                                <select class="form-select" name="prioritas" id="prioritasFilter" disabled>
+                                <select class="form-select" name="prioritas" id="prioritasFilter">
 
                                     <option value="">Semua Prioritas</option>
-                                    <option value="High">High</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="Low">Low</option>
+                                    <!-- Opsi diisi otomatis lewat JS dari data yang sudah dimuat -->
 
                                 </select>
 
                             </div>
 
-                            <!-- SLA (dinonaktifkan) -->
+                            <!-- SLA -->
                             <div class="col-lg-1">
 
                                 <label class="form-label fw-semibold">
                                     SLA
                                 </label>
 
-                                <select class="form-select" name="sla" id="slaFilter" disabled>
+                                <select class="form-select" name="sla" id="slaFilter">
 
                                     <option value="">Semua</option>
-                                    <option value="Dalam SLA">Dalam SLA</option>
-                                    <option value="Lewat SLA">Lewat SLA</option>
+                                    <!-- Opsi diisi otomatis lewat JS dari data yang sudah dimuat -->
 
                                 </select>
 
@@ -497,6 +492,12 @@ require_once 'auth.php';
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
     const API_URL = "https://script.google.com/macros/s/AKfycbwzkNx5yJ78nSmoPEOUE200Osm3wKQiy2gn4kY1xrodRXKFKrbV8UIuP8Z_pChnb-PdPg/exec";
 
+    // allTasksRaw = SEMUA data task hasil fetch dari server (tidak difilter).
+    // allTasks    = hasil SARINGAN dari allTasksRaw sesuai filter aktif saat ini,
+    //               inilah yang dipakai untuk tabel & pagination.
+    // Filter/search TIDAK PERNAH fetch ke server lagi setelah data awal dimuat -
+    // semuanya cuma menyaring array allTasksRaw yang sudah ada di memory.
+    let allTasksRaw = [];
     let allTasks = [];
     let currentPage = 1;
     const rowsPerPage = 10;
@@ -523,10 +524,21 @@ require_once 'auth.php';
         toast.show();
     }
 
-    // ---- Cache data ke localStorage supaya saat halaman dibuka lagi ----
-    // ---- data langsung tampil tanpa menunggu fetch ke server ----
+    // ---- Ubah error fetch generik jadi pesan yang lebih jelas untuk user ----
+    function explainFetchError(err) {
+        if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
+            return "Tidak bisa menghubungi server (kemungkinan deployment Apps Script " +
+                   "belum di-redeploy versi terbaru, atau akses belum diset 'Anyone'). " +
+                   "Cek tab Console (F12) untuk detail CORS.";
+        }
+        return err.message;
+    }
+
+    // ============================================================
+    // CACHE (localStorage) — supaya saat halaman dibuka lagi, data
+    // langsung tampil instan tanpa menunggu fetch ke server
+    // ============================================================
     const CACHE_KEY = "netops_inbox_task_cache";
-    const CACHE_MAX_AGE_MS = 5 * 60 * 1000; // anggap "segar" selama 5 menit
 
     function saveCache(tasks) {
         try {
@@ -556,69 +568,44 @@ require_once 'auth.php';
         } catch (e) { /* noop */ }
     }
 
-    // Tampilkan data dari cache (kalau ada) secara instan, tanpa spinner
-    function renderFromCacheIfAvailable() {
-        const cached = readCache();
-        if (cached && Array.isArray(cached.tasks)) {
-            allTasks = cached.tasks;
-            currentPage = 1;
-            renderTable();
-            renderPagination();
-
-            const ageMinutes = Math.round((Date.now() - cached.savedAt) / 60000);
-            document.getElementById("tableInfo").innerHTML +=
-                ` <span class="text-muted">(data cache, ${ageMinutes < 1 ? 'baru saja' : ageMinutes + ' menit lalu'})</span>`;
-
-            return true;
-        }
-        return false;
-    }
-
-    async function loadTasks(options = {}) {
+    // ============================================================
+    // FETCH DATA DARI SERVER
+    // Ini SATU-SATUNYA tempat yang boleh manggil fetch(GET) ke Apps
+    // Script untuk ambil daftar task. Dipanggil HANYA saat:
+    // 1) Halaman pertama kali dibuka
+    // 2) Tombol Refresh diklik
+    // Filter/search TIDAK memanggil fungsi ini sama sekali.
+    // ============================================================
+    async function fetchTasksFromServer(options = {}) {
         const { silent = false, useCache = false } = options;
-
-        const keyword = document.getElementById("searchInput").value;
-        const status = document.getElementById("statusFilter").value;
-
-        // Filter Tipe, Prioritas, dan SLA saat ini dinonaktifkan untuk user,
-        // sehingga nilainya selalu dikirim kosong (tidak difilter) apapun
-        // isi elemen select-nya.
-        const tipe = "";
-        const prioritas = "";
-        const sla = "";
-
-        const isDefaultView = !keyword && !status;
-
-        const url =
-            API_URL +
-            "?search=" + encodeURIComponent(keyword) +
-            "&status=" + encodeURIComponent(status) +
-            "&tipe=" + encodeURIComponent(tipe) +
-            "&prioritas=" + encodeURIComponent(prioritas) +
-            "&sla=" + encodeURIComponent(sla);
 
         hideLoadError();
 
-        // Kalau ini load pertama tanpa filter, coba tampilkan cache dulu
-        // supaya user tidak melihat tabel kosong/spinner saat buka halaman.
         let shownFromCache = false;
-        if (useCache && isDefaultView) {
-            shownFromCache = renderFromCacheIfAvailable();
+        if (useCache) {
+            const cached = readCache();
+            if (cached && Array.isArray(cached.tasks)) {
+                allTasksRaw = cached.tasks;
+                populateFilterOptions(allTasksRaw);
+                applyFiltersAndRender();
+
+                const ageMinutes = Math.round((Date.now() - cached.savedAt) / 60000);
+                document.getElementById("tableInfo").innerHTML +=
+                    ` <span class="text-muted">(data cache, ${ageMinutes < 1 ? 'baru saja' : ageMinutes + ' menit lalu'})</span>`;
+
+                shownFromCache = true;
+            }
         }
 
-        // Kalau tidak ada cache untuk ditampilkan, baru munculkan spinner.
-        // Kalau sudah ada data dari cache, fetch berjalan diam-diam di background.
         if (!shownFromCache && !silent) {
             setTableLoading();
         }
 
         try {
-            const res = await fetch(url);
+            // Tidak ada query parameter search/status/tipe/dst dikirim ke server -
+            // kita SELALU ambil semua data, lalu filter dilakukan di client.
+            const res = await fetch(API_URL);
 
-            // Ambil sebagai teks dulu, supaya kalau ternyata bukan JSON
-            // (mis. Apps Script mengembalikan halaman login/HTML karena
-            // deployment belum "Anyone can access"), kita bisa lihat isinya
-            // di console, bukan cuma error samar dari res.json().
             const rawText = await res.text();
 
             console.log("Status HTTP:", res.status);
@@ -639,8 +626,6 @@ require_once 'auth.php';
                 );
             }
 
-            // Dukung dua kemungkinan bentuk response:
-            // { tasks: [...] }  ATAU  [...] langsung
             let tasks;
             if (Array.isArray(data)) {
                 tasks = data;
@@ -655,36 +640,121 @@ require_once 'auth.php';
                 );
             }
 
-            allTasks = tasks;
-            currentPage = 1;
+            allTasksRaw = tasks;
 
-            renderTable();
-            renderPagination();
+            populateFilterOptions(allTasksRaw);
+            applyFiltersAndRender();
 
-            // Simpan ke cache hanya untuk tampilan default (tanpa filter aktif)
-            if (isDefaultView) {
-                saveCache(tasks);
-            }
+            saveCache(tasks);
 
         } catch (err) {
             console.error("Gagal memuat data task:", err);
 
-            // Kalau ini silent refresh dan sebelumnya sudah ada data dari
-            // cache yang tampil, jangan kosongkan tabel — cukup beri tahu
-            // lewat banner bahwa data yang tampil mungkin sudah tidak terbaru.
+            const friendlyMessage = explainFetchError(err);
+
             if (shownFromCache) {
                 showLoadError(
-                    "Gagal memperbarui data terbaru dari server (" + err.message + "). " +
+                    "Gagal memperbarui data terbaru dari server (" + friendlyMessage + "). " +
                     "Data yang ditampilkan berasal dari cache sebelumnya."
                 );
             } else {
+                allTasksRaw = [];
                 allTasks = [];
                 renderTable();
                 renderPagination();
-                showLoadError(err.message);
+                showLoadError(friendlyMessage);
                 showToast("Gagal memuat data task.", true);
             }
         }
+    }
+
+    // ============================================================
+    // ISI OPSI DROPDOWN Tipe / Prioritas / SLA SECARA OTOMATIS
+    // berdasarkan nilai unik yang benar-benar ada di data (bukan
+    // hardcode), supaya filter selalu cocok dengan data sebenarnya.
+    // ============================================================
+    function populateFilterOptions(tasks) {
+        fillSelectWithUniqueValues("tipeFilter", tasks, "tipe", "Semua Tipe");
+        fillSelectWithUniqueValues("prioritasFilter", tasks, "prioritas", "Semua Prioritas");
+        fillSelectWithUniqueValues("slaFilter", tasks, "sla", "Semua");
+    }
+
+    function fillSelectWithUniqueValues(selectId, tasks, field, defaultLabel) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        const previousValue = select.value; // simpan pilihan sebelumnya kalau ada
+
+        const uniqueValues = Array.from(
+            new Set(
+                tasks
+                    .map(t => (t[field] || "").toString().trim())
+                    .filter(v => v !== "")
+            )
+        ).sort((a, b) => a.localeCompare(b, "id"));
+
+        let html = `<option value="">${escapeHtml(defaultLabel)}</option>`;
+        uniqueValues.forEach(v => {
+            html += `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`;
+        });
+
+        select.innerHTML = html;
+
+        // Kembalikan pilihan sebelumnya kalau masih ada di daftar opsi baru
+        if (previousValue && uniqueValues.includes(previousValue)) {
+            select.value = previousValue;
+        }
+    }
+
+    // ============================================================
+    // FILTER + SEARCH — 100% CLIENT-SIDE, TIDAK ADA FETCH KE SERVER
+    // ============================================================
+    function applyFiltersAndRender() {
+
+        const keyword = document.getElementById("searchInput").value.toLowerCase().trim();
+        const status = document.getElementById("statusFilter").value.toLowerCase().trim();
+        const tipe = document.getElementById("tipeFilter").value.toLowerCase().trim();
+        const prioritas = document.getElementById("prioritasFilter").value.toLowerCase().trim();
+        const sla = document.getElementById("slaFilter").value.toLowerCase().trim();
+
+        allTasks = allTasksRaw.filter(task => {
+
+            const idL         = (task.id || "").toLowerCase();
+            const tipeL       = (task.tipe || "").toLowerCase();
+            const customerL   = (task.customer || "").toLowerCase();
+            const areaL       = (task.area || "").toLowerCase();
+            const prioritasL  = (task.prioritas || "").toLowerCase();
+            const sisaL       = (task.sisa_waktu || "").toLowerCase();
+            const slaL        = (task.sla || "").toLowerCase();
+            const statusL     = (task.status || "").toLowerCase();
+
+            // SEARCH: cocok kalau salah satu kolom mengandung keyword
+            if (keyword) {
+                const matchKeyword =
+                    idL.includes(keyword) ||
+                    tipeL.includes(keyword) ||
+                    customerL.includes(keyword) ||
+                    areaL.includes(keyword) ||
+                    prioritasL.includes(keyword) ||
+                    sisaL.includes(keyword) ||
+                    slaL.includes(keyword) ||
+                    statusL.includes(keyword);
+
+                if (!matchKeyword) return false;
+            }
+
+            // FILTER: harus cocok PERSIS kalau filter diisi
+            if (status && statusL !== status) return false;
+            if (tipe && tipeL !== tipe) return false;
+            if (prioritas && prioritasL !== prioritas) return false;
+            if (sla && slaL !== sla) return false;
+
+            return true;
+        });
+
+        currentPage = 1;
+        renderTable();
+        renderPagination();
     }
 
     function setTableLoading() {
@@ -763,8 +833,7 @@ require_once 'auth.php';
 
     }
 
-    // Ambil task dari allTasks berdasarkan index (lebih aman daripada
-    // menaruh seluruh object task di atribut onclick)
+    // Ambil task dari allTasks (hasil filter yang sedang tampil) berdasarkan index
     function showDetailByIndex(btn) {
         const index = parseInt(btn.getAttribute("data-index"), 10);
         const task = allTasks[index];
@@ -785,7 +854,6 @@ require_once 'auth.php';
 
         document.getElementById("selectedTaskId").value = task.id ?? "";
 
-        // Sinkronkan form update dengan status task yang dipilih
         document.getElementById("updateStatus").value = task.status ?? "Open";
         document.getElementById("updateCatatan").value = task.catatan ?? "";
 
@@ -797,8 +865,7 @@ require_once 'auth.php';
     // bagian yang di-skip. Contoh hasil: [1,2,3,'...',12]
     function getPageNumbers(current, total, siblingCount = 1) {
 
-        // Kalau halaman sedikit, tampilkan semua tanpa "..."
-        const totalVisible = siblingCount * 2 + 5; // first + last + current + 2 sibling + 2 ellipsis slot
+        const totalVisible = siblingCount * 2 + 5;
         if (total <= totalVisible) {
             return Array.from({ length: total }, (_, i) => i + 1);
         }
@@ -811,7 +878,6 @@ require_once 'auth.php';
         const showLeftEllipsis = leftSibling > 2;
         const showRightEllipsis = rightSibling < total - 1;
 
-        // Selalu tampilkan halaman pertama
         pages.push(1);
 
         if (showLeftEllipsis) {
@@ -830,7 +896,6 @@ require_once 'auth.php';
             for (let i = rightSibling + 1; i < total; i++) pages.push(i);
         }
 
-        // Selalu tampilkan halaman terakhir
         pages.push(total);
 
         return pages;
@@ -846,7 +911,6 @@ require_once 'auth.php';
 
         if (totalPage <= 1) return;
 
-        // Tombol "Prev"
         pagination.innerHTML += `
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
             <button class="page-link" type="button" onclick="changePage(${currentPage - 1})">
@@ -874,7 +938,6 @@ require_once 'auth.php';
 
         });
 
-        // Tombol "Next"
         pagination.innerHTML += `
         <li class="page-item ${currentPage === totalPage ? 'disabled' : ''}">
             <button class="page-link" type="button" onclick="changePage(${currentPage + 1})">
@@ -903,7 +966,12 @@ require_once 'auth.php';
         });
     }
 
-    // ---- Simpan update task ke Apps Script / Google Sheet ----
+    // ============================================================
+    // SIMPAN UPDATE TASK
+    // Setelah sukses, TIDAK fetch ulang ke server. Cukup update objek
+    // task yang bersangkutan langsung di allTasksRaw (dan cache),
+    // lalu re-render dari data yang sudah ada di memory.
+    // ============================================================
     async function saveTaskUpdate() {
 
         const id = document.getElementById("selectedTaskId").value;
@@ -920,19 +988,20 @@ require_once 'auth.php';
 
         try {
 
+            const newStatus = document.getElementById("updateStatus").value;
+            const newCatatan = document.getElementById("updateCatatan").value;
+
             const payload = {
                 action: "update",
                 id: id,
-                status: document.getElementById("updateStatus").value,
-                catatan: document.getElementById("updateCatatan").value
+                status: newStatus,
+                catatan: newCatatan
             };
 
-            // Lampiran opsional
             const fileInput = document.getElementById("updateLampiran");
             const file = fileInput && fileInput.files[0];
 
             if (file) {
-                // Batasi ukuran file di sisi client supaya tidak gagal diam-diam
                 const MAX_SIZE = 8 * 1024 * 1024; // 8MB
                 if (file.size > MAX_SIZE) {
                     throw new Error("Ukuran file lampiran terlalu besar (maks. 8MB).");
@@ -974,13 +1043,37 @@ require_once 'auth.php';
                 throw new Error(data.error || "Update ditolak oleh server.");
             }
 
+            // ---- Update data di memory (allTasksRaw), TANPA fetch ulang ----
+            const idx = allTasksRaw.findIndex(t => t.id === id);
+            if (idx !== -1) {
+                allTasksRaw[idx] = {
+                    ...allTasksRaw[idx],
+                    status: newStatus,
+                    catatan: newCatatan
+                };
+            }
+
+            // Simpan perubahan ke cache juga, supaya konsisten kalau
+            // halaman di-reload nanti sebelum sempat Refresh manual.
+            saveCache(allTasksRaw);
+
+            // Perbarui dropdown filter (siapa tahu status/tipe baru
+            // memunculkan opsi yang belum ada) dan render ulang tabel
+            // dengan filter yang SAMA seperti sebelumnya (tanpa reset).
+            populateFilterOptions(allTasksRaw);
+            applyFiltersAndRender();
+
+            // Perbarui juga panel Detail Task supaya konsisten dengan data baru
+            if (idx !== -1) {
+                showDetail(allTasksRaw[idx]);
+            }
+
             showToast("Task " + id + " berhasil diperbarui.");
-            clearCache();
-            await loadTasks();
 
         } catch (err) {
             console.error("Gagal menyimpan update task:", err);
-            showToast("Gagal menyimpan perubahan task: " + err.message, true);
+            const friendlyMessage = explainFetchError(err);
+            showToast("Gagal menyimpan perubahan task: " + friendlyMessage, true);
         } finally {
             btnSimpan.disabled = false;
             btnSimpan.innerHTML = originalText;
@@ -1006,31 +1099,32 @@ require_once 'auth.php';
 
     // ---- Event Listeners ----
 
-    document.getElementById("btnCari").addEventListener("click", () => loadTasks());
+    // Cari & Filter: 100% client-side, tidak fetch ke server.
+    document.getElementById("btnCari").addEventListener("click", () => applyFiltersAndRender());
+    document.getElementById("btnFilter").addEventListener("click", () => applyFiltersAndRender());
 
-    document.getElementById("btnFilter").addEventListener("click", () => loadTasks());
-
-    // Refresh = paksa ambil data terbaru dari server, hapus cache lama
+    // Refresh = satu-satunya tombol yang sengaja ambil data terbaru dari server.
     document.getElementById("btnRefresh").addEventListener("click", () => {
         clearCache();
-        loadTasks();
+        fetchTasksFromServer();
     });
 
     document.getElementById("btnSimpan").addEventListener("click", saveTaskUpdate);
 
     document.getElementById("btnBatal").addEventListener("click", resetDetailForm);
 
-    // Cegah reload halaman kalau form filter di-submit lewat tombol Enter
+    // Cegah reload halaman kalau form filter di-submit lewat tombol Enter,
+    // dan langsung filter di client (tidak fetch ke server).
     document.getElementById("filterForm").addEventListener("submit", function (e) {
         e.preventDefault();
-        loadTasks();
+        applyFiltersAndRender();
     });
 
     // Pertama kali halaman dibuka:
-    // 1) Tampilkan data dari cache secara instan (kalau ada dan tanpa filter aktif)
+    // 1) Tampilkan data dari cache secara instan (kalau ada)
     // 2) Tetap ambil data terbaru dari server di background untuk menyegarkan cache
     window.onload = function () {
-        loadTasks({ useCache: true, silent: true });
+        fetchTasksFromServer({ useCache: true, silent: true });
     };
 
     </script>
