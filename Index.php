@@ -128,7 +128,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwzkNx5yJ78nSmoPEOUE200Osm3wKQiy2gn4kY1xrodRXKFKrbV8UIuP8Z_pChnb-PdPg/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxR4QR_LIOqPXtGY6AtV7oEixhrUyjN9no4CzeQyo2lu2TngVHcwRMDVTSr8l61UZIEzw/exec";
+
+    // Role user (dari session PHP) dikirim ke Apps Script sebagai
+    // query param, dipakai untuk filter kategori + wilayah data
+    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
     let priorityDataTable = null;
     let onAirDataTable = null;
@@ -137,7 +141,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     async function loadDashboardData() {
         try {
-            const res = await fetch(GAS_URL);
+            const url = GAS_URL + "?role=" + encodeURIComponent(USER_ROLE);
+            const res = await fetch(url);
             const response = await res.json();
 
             if (response.success) {
@@ -158,24 +163,15 @@ $role = strtoupper($_SESSION['role'] ?? '');
         document.getElementById('confirmTask').textContent = r.confirm ?? 0;
     }
 
-    // Semua data (rows) tetap dikirim sekali dari server (semua data di
-    // database, bukan sepotong-sepotong) dan disimpan penuh di memory
-    // browser lewat DataTable's `data: rows`. Ganti halaman / ganti jumlah
-    // baris per halaman di bawah ini SEPENUHNYA di sisi browser (client-side)
-    // -> tidak ada fetch ulang ke server sama sekali.
     function renderPriorityTable(rows) {
         if (priorityDataTable) priorityDataTable.destroy();
 
         priorityDataTable = new DataTable('#priorityTable', {
             data: rows,
-            paging: true,
-            pageLength: 10,                          // default jumlah baris per halaman
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']], // dropdown pilihan
-            pagingType: 'simple_numbers',             // otomatis jadi "..." kalau halaman banyak
+            pageLength: 10,
             scrollX: true,
             searching: true,
             ordering: true,
-            info: true,
             columns: [
                 { title: 'No', data: null, render: (d, t, r, meta) => meta.row + 1 },
                 { title: 'ID Task', data: 'id', defaultContent: '-' },
@@ -192,14 +188,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
         onAirDataTable = new DataTable('#onAirTable', {
             data: rows,
-            paging: true,
             pageLength: 10,
-            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Semua']],
-            pagingType: 'simple_numbers',
             scrollX: true,
-            searching: true,
-            ordering: true,
-            info: true,
             columns: [
                 { title: 'Tanggal On Air', data: 'tanggal' },
                 { title: 'Site Name', data: 'siteName' },
@@ -237,8 +227,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     backgroundColor: '#3b82f6'
                 }]
             },
-            options: { 
-                responsive: true, 
+            options: {
+                responsive: true,
                 maintainAspectRatio: false,
                 scales: { y: { beginAtZero: true } }
             }

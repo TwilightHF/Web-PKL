@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $url = "https://script.google.com/macros/s/AKfycbzB026p6CF6Eitn3HGrsRGh9sEa3ph8jv0yq6Ei8eiPS1oBT96ZcDMPzAQbV_nH8fm-FA/exec";
+    $url = "https://script.google.com/macros/s/AKfycbxR4QR_LIOqPXtGY6AtV7oEixhrUyjN9no4CzeQyo2lu2TngVHcwRMDVTSr8l61UZIEzw/exec";
 
     $postData = http_build_query([
         "username" => $username,
@@ -52,7 +52,9 @@ if (isset($_POST['login'])) {
         if (!empty($result['success'])) {
             $_SESSION['username'] = $result['username'];
             $_SESSION['nama']     = $result['nama'];
-            $_SESSION['role']     = $result['role'] ?? 'user';
+            // role disimpan uppercase & trimmed supaya konsisten
+            // saat dicocokkan dengan kategori/wilayah di Apps Script
+            $_SESSION['role']     = strtoupper(trim($result['role'] ?? 'USER'));
             $_SESSION['loker']    = $result['loker'] ?? '';
 
             header("Location: index.php");
@@ -101,7 +103,7 @@ if (isset($_POST['login'])) {
     <div class="right-side">
         <div class="login-box">
             <h2 class="mb-4 text-center">Login</h2>
-            
+
             <?php if ($error): ?>
                 <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
