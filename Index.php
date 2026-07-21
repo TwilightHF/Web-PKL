@@ -128,7 +128,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyO0UdsBkZdCyHXJZS3uGgxsGB9m-eWDWnrM3-hWSBeJqE6NsCoQrFM9yagbbRdQkmOgw/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxuXndEYpie-gQJXBet3-hbt0HvntCarFiwEGJ_03O980gUjl5LYiHil9h7Nx6Zf01wVA/exec";
+
+    // Role user (dari session PHP) dikirim ke Apps Script sebagai
+    // query param, dipakai untuk filter kategori + wilayah data
+    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
     let priorityDataTable = null;
     let onAirDataTable = null;
@@ -137,7 +141,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     async function loadDashboardData() {
         try {
-            const res = await fetch(GAS_URL);
+            const url = GAS_URL + "?role=" + encodeURIComponent(USER_ROLE);
+            const res = await fetch(url);
             const response = await res.json();
 
             if (response.success) {
@@ -211,7 +216,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // Bar Chart
+        // Bar Charts
         barChartInstance = new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {
@@ -222,8 +227,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     backgroundColor: '#3b82f6'
                 }]
             },
-            options: { 
-                responsive: true, 
+            options: {
+                responsive: true,
                 maintainAspectRatio: false,
                 scales: { y: { beginAtZero: true } }
             }
