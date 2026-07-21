@@ -192,8 +192,9 @@ $role = strtoupper($_SESSION['role'] ?? '');
             scrollX: true,
             columns: [
                 { title: 'Tanggal On Air', data: 'tanggal' },
-                { title: 'Site Name', data: 'siteName' },
+                { title: 'Site ID', data: 'siteid', defaultContent: '-' },
                 { title: 'NIM', data: 'nim' },
+                { title: 'Site Name', data: 'siteName' },
                 { title: 'Program', data: 'program' }
             ]
         });
