@@ -128,7 +128,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxR4QR_LIOqPXtGY6AtV7oEixhrUyjN9no4CzeQyo2lu2TngVHcwRMDVTSr8l61UZIEzw/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxuXndEYpie-gQJXBet3-hbt0HvntCarFiwEGJ_03O980gUjl5LYiHil9h7Nx6Zf01wVA/exec";
 
     // Role user (dari session PHP) dikirim ke Apps Script sebagai
     // query param, dipakai untuk filter kategori + wilayah data
