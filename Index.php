@@ -217,7 +217,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // Bar Chart
+        // Bar Charts
         barChartInstance = new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {
