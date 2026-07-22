@@ -1,5 +1,6 @@
 <?php
 require_once 'auth.php';
+$role = strtoupper($_SESSION['role'] ?? '');
 ?>
 
 <!DOCTYPE html>
@@ -490,7 +491,12 @@ require_once 'auth.php';
 
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "https://script.google.com/macros/s/AKfycbwzkNx5yJ78nSmoPEOUE200Osm3wKQiy2gn4kY1xrodRXKFKrbV8UIuP8Z_pChnb-PdPg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwdZdYwd57UG3z4OELJJ0Lwbc3ymj2SDy503i33W4kV70kz2eHG9lqLOzNHZlZE2Rva4Q/exec";
+
+    // Role user (dari session PHP) dikirim ke Apps Script sebagai
+    // query param, dipakai untuk filter kategori + wilayah data
+    // (logika sama persis dengan yang dipakai di index.php)
+    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
     // allTasksRaw = SEMUA data task hasil fetch dari server (tidak difilter).
     // allTasks    = hasil SARINGAN dari allTasksRaw sesuai filter aktif saat ini,
@@ -538,7 +544,7 @@ require_once 'auth.php';
     // CACHE (localStorage) — supaya saat halaman dibuka lagi, data
     // langsung tampil instan tanpa menunggu fetch ke server
     // ============================================================
-    const CACHE_KEY = "netops_inbox_task_cache";
+    const CACHE_KEY = "netops_inbox_task_cache_" + USER_ROLE;
 
     function saveCache(tasks) {
         try {
@@ -603,8 +609,10 @@ require_once 'auth.php';
 
         try {
             // Tidak ada query parameter search/status/tipe/dst dikirim ke server -
-            // kita SELALU ambil semua data, lalu filter dilakukan di client.
-            const res = await fetch(API_URL);
+            // kita SELALU ambil semua data (yang sudah difilter server sesuai role),
+            // lalu filter tambahan (search/status/tipe/dst) dilakukan di client.
+            const url = API_URL + "?role=" + encodeURIComponent(USER_ROLE);
+            const res = await fetch(url);
 
             const rawText = await res.text();
 
