@@ -128,11 +128,12 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxuXndEYpie-gQJXBet3-hbt0HvntCarFiwEGJ_03O980gUjl5LYiHil9h7Nx6Zf01wVA/exec";
-
-    // Role user (dari session PHP) dikirim ke Apps Script sebagai
-    // query param, dipakai untuk filter kategori + wilayah data
-    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
+    // Sekarang menunjuk ke proxy PHP lokal, BUKAN langsung ke Apps Script.
+    // URL Apps Script asli disimpan di server (api/dashboard.php) dan
+    // tidak pernah dikirim ke browser. Role juga tidak perlu dikirim
+    // dari client lagi, karena api/dashboard.php mengambilnya sendiri
+    // dari $_SESSION di server.
+    const API_URL = "api/dashboard.php";
 
     let priorityDataTable = null;
     let onAirDataTable = null;
@@ -141,8 +142,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     async function loadDashboardData() {
         try {
-            const url = GAS_URL + "?role=" + encodeURIComponent(USER_ROLE);
-            const res = await fetch(url);
+            const res = await fetch(API_URL);
             const response = await res.json();
 
             if (response.success) {
