@@ -1107,9 +1107,30 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ---- Event Listeners ----
 
-    // Cari & Filter: 100% client-side, tidak fetch ke server.
+    // Tombol Cari/Filter tetap ada dan berfungsi (klik langsung filter),
+    // tapi sekarang TIDAK WAJIB dipencet lagi - lihat auto-filter di bawah.
     document.getElementById("btnCari").addEventListener("click", () => applyFiltersAndRender());
     document.getElementById("btnFilter").addEventListener("click", () => applyFiltersAndRender());
+
+    // ============================================================
+    // AUTO-FILTER (live) - langsung filter begitu diketik/diubah,
+    // tanpa perlu pencet tombol Filter/Cari. 100% client-side.
+    // ============================================================
+
+    // Search: pakai debounce (jeda 300ms setelah berhenti mengetik) supaya
+    // tidak filter ulang di setiap huruf yang diketik - lebih ringan kalau
+    // datanya banyak, tapi tetap terasa instan.
+    let searchDebounceTimer = null;
+    document.getElementById("searchInput").addEventListener("input", () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => applyFiltersAndRender(), 300);
+    });
+
+    // Dropdown (Status/Tipe/Prioritas/SLA): langsung filter begitu dipilih,
+    // tidak perlu debounce karena "change" cuma terjadi sekali per pilihan.
+    ["statusFilter", "tipeFilter", "prioritasFilter", "slaFilter"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => applyFiltersAndRender());
+    });
 
     // Refresh = satu-satunya tombol yang sengaja ambil data terbaru dari server.
     document.getElementById("btnRefresh").addEventListener("click", () => {
