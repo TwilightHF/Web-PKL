@@ -491,7 +491,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "https://script.google.com/macros/s/AKfycbwdZdYwd57UG3z4OELJJ0Lwbc3ymj2SDy503i33W4kV70kz2eHG9lqLOzNHZlZE2Rva4Q/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycby5vA-fwR-hvQnsdgqenk_GLjjtQ1AgcItWamnRwbv_qmRSJuZaHizAj64RFXZydu6AmA/exec";
 
     // Role user (dari session PHP) dikirim ke Apps Script sebagai
     // query param, dipakai untuk filter kategori + wilayah data
