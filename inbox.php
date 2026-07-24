@@ -489,23 +489,13 @@ $role = strtoupper($_SESSION['role'] ?? '');
             });
         });
 
-<<<<<<< HEAD
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
     const API_URL = "https://script.google.com/macros/s/AKfycby5vA-fwR-hvQnsdgqenk_GLjjtQ1AgcItWamnRwbv_qmRSJuZaHizAj64RFXZydu6AmA/exec";
-=======
-    // Sekarang menunjuk ke proxy PHP lokal, BUKAN langsung ke Apps Script.
-    // URL Apps Script asli disimpan di server (api/inbox.php) dan tidak
-    // pernah dikirim ke browser. Role juga tidak dikirim dari client lagi -
-    // api/inbox.php mengambilnya sendiri dari $_SESSION di server, sehingga
-    // tidak bisa dipalsukan lewat query string.
-    const API_URL = "api/inbox.php";
->>>>>>> 8c289233617254273ef3d4b00a9d90bf0ded9629
 
-    // Dipakai HANYA untuk namespace key localStorage (supaya cache per role
-    // tidak tercampur di browser yang sama). TIDAK dipakai lagi untuk
-    // otorisasi/filter data - itu sekarang murni ditentukan server
-    // (api/inbox.php) dari $_SESSION.
+    // Role user (dari session PHP) dikirim ke Apps Script sebagai
+    // query param, dipakai untuk filter kategori + wilayah data
+    // (logika sama persis dengan yang dipakai di index.php)
     const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
     // allTasksRaw = SEMUA data task hasil fetch dari server (tidak difilter).
@@ -618,11 +608,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
         }
 
         try {
-            // Tidak ada parameter apa pun yang perlu dikirim dari client -
-            // role diambil dari session PHP di server (api/inbox.php),
+            // Tidak ada query parameter search/status/tipe/dst dikirim ke server -
             // kita SELALU ambil semua data (yang sudah difilter server sesuai role),
             // lalu filter tambahan (search/status/tipe/dst) dilakukan di client.
-            const res = await fetch(API_URL);
+            const url = API_URL + "?role=" + encodeURIComponent(USER_ROLE);
+            const res = await fetch(url);
 
             const rawText = await res.text();
 
