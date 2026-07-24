@@ -24,7 +24,7 @@ if (!$role) {
 }
 
 // URL Apps Script khusus INBOX (berbeda dari deployment dashboard).
-const GAS_URL_INBOX = "https://script.google.com/macros/s/AKfycbwdZdYwd57UG3z4OELJJ0Lwbc3ymj2SDy503i33W4kV70kz2eHG9lqLOzNHZlZE2Rva4Q/exec";
+const GAS_URL_INBOX = "https://script.google.com/macros/s/AKfycby5vA-fwR-hvQnsdgqenk_GLjjtQ1AgcItWamnRwbv_qmRSJuZaHizAj64RFXZydu6AmA/exec";
 
 $method = $_SERVER['REQUEST_METHOD'];
 
