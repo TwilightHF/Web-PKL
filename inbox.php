@@ -489,13 +489,17 @@ $role = strtoupper($_SESSION['role'] ?? '');
             });
         });
 
-    // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
-    // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "https://script.google.com/macros/s/AKfycbwdZdYwd57UG3z4OELJJ0Lwbc3ymj2SDy503i33W4kV70kz2eHG9lqLOzNHZlZE2Rva4Q/exec";
+    // Sekarang menunjuk ke proxy PHP lokal, BUKAN langsung ke Apps Script.
+    // URL Apps Script asli disimpan di server (api/inbox.php) dan tidak
+    // pernah dikirim ke browser. Role juga tidak dikirim dari client lagi -
+    // api/inbox.php mengambilnya sendiri dari $_SESSION di server, sehingga
+    // tidak bisa dipalsukan lewat query string.
+    const API_URL = "api/inbox.php";
 
-    // Role user (dari session PHP) dikirim ke Apps Script sebagai
-    // query param, dipakai untuk filter kategori + wilayah data
-    // (logika sama persis dengan yang dipakai di index.php)
+    // Dipakai HANYA untuk namespace key localStorage (supaya cache per role
+    // tidak tercampur di browser yang sama). TIDAK dipakai lagi untuk
+    // otorisasi/filter data - itu sekarang murni ditentukan server
+    // (api/inbox.php) dari $_SESSION.
     const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
     // allTasksRaw = SEMUA data task hasil fetch dari server (tidak difilter).
@@ -608,11 +612,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
         }
 
         try {
-            // Tidak ada query parameter search/status/tipe/dst dikirim ke server -
+            // Tidak ada parameter apa pun yang perlu dikirim dari client -
+            // role diambil dari session PHP di server (api/inbox.php),
             // kita SELALU ambil semua data (yang sudah difilter server sesuai role),
             // lalu filter tambahan (search/status/tipe/dst) dilakukan di client.
-            const url = API_URL + "?role=" + encodeURIComponent(USER_ROLE);
-            const res = await fetch(url);
+            const res = await fetch(API_URL);
 
             const rawText = await res.text();
 
