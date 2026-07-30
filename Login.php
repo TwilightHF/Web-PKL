@@ -110,19 +110,16 @@ if (isset($_POST['login'])) {
 
             <form method="POST">
                 <div class="mb-3">
-                    <input type="text" name="username" class="form-control" placeholder="Username (admin)" required>
+                    <input type="text" name="username" class="form-control" placeholder="Username" required>
                 </div>
                 <div class="mb-4">
-                    <input type="password" name="password" class="form-control" placeholder="Password (admin123)" required>
+                    <input type="password" name="password" class="form-control" placeholder="Password" required>
                 </div>
                 <button type="submit" name="login" class="btn btn-primary login-btn">
                     LOGIN
                 </button>
             </form>
 
-            <div class="text-center mt-3">
-                <small class="text-light">Default: admin / admin123</small>
-            </div>
         </div>
     </div>
 </div>
