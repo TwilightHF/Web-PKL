@@ -55,7 +55,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
-                                <h6 class="text-muted">Open Task</h6>
+                                <h6 class="text-muted">Open</h6>
                                 <h2 class="text-danger" id="openTask">0</h2>
                             </div>
                         </div>
@@ -71,7 +71,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
-                                <h6 class="text-muted">Confirmation</h6>
+                                <h6 class="text-muted">Close</h6>
                                 <h2 class="text-success" id="confirmTask">0</h2>
                             </div>
                         </div>
