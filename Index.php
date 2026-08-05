@@ -55,7 +55,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
-                                <h6 class="text-muted">Open</h6>
+                                <h6 class="text-muted">Open Task</h6>
                                 <h2 class="text-danger" id="openTask">0</h2>
                             </div>
                         </div>
@@ -71,7 +71,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100">
                             <div class="card-body">
-                                <h6 class="text-muted">Close</h6>
+                                <h6 class="text-muted">Confirmation</h6>
                                 <h2 class="text-success" id="confirmTask">0</h2>
                             </div>
                         </div>
@@ -128,12 +128,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="script.js"></script>
 
     <script>
-    // Sekarang menunjuk ke proxy PHP lokal, BUKAN langsung ke Apps Script.
-    // URL Apps Script asli disimpan di server (api/dashboard.php) dan
-    // tidak pernah dikirim ke browser. Role juga tidak perlu dikirim
-    // dari client lagi, karena api/dashboard.php mengambilnya sendiri
-    // dari $_SESSION di server.
-    const API_URL = "api/dashboard.php";
+    const GAS_URL = "api/dashboard.php";
+
+    // Role user (dari session PHP) dikirim ke Apps Script sebagai
+    // query param, dipakai untuk filter kategori + wilayah data
+    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
     let priorityDataTable = null;
     let onAirDataTable = null;
@@ -142,7 +141,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     async function loadDashboardData() {
         try {
-            const res = await fetch(API_URL);
+            const url = GAS_URL + "?role=" + encodeURIComponent(USER_ROLE);
+            const res = await fetch(url);
             const response = await res.json();
 
             if (response.success) {
@@ -217,7 +217,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // Bar Charts
+        // Bar Chart
         barChartInstance = new Chart(document.getElementById('barChart'), {
             type: 'bar',
             data: {

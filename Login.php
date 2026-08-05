@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $url = "https://script.google.com/macros/s/AKfycbxR4QR_LIOqPXtGY6AtV7oEixhrUyjN9no4CzeQyo2lu2TngVHcwRMDVTSr8l61UZIEzw/exec";
+    $url = "https://script.google.com/macros/s/AKfycbzB026p6CF6Eitn3HGrsRGh9sEa3ph8jv0yq6Ei8eiPS1oBT96ZcDMPzAQbV_nH8fm-FA/exec";
 
     $postData = http_build_query([
         "username" => $username,
@@ -110,16 +110,19 @@ if (isset($_POST['login'])) {
 
             <form method="POST">
                 <div class="mb-3">
-                    <input type="text" name="username" class="form-control" placeholder="Username" required>
+                    <input type="text" name="username" class="form-control" placeholder="Username (admin)" required>
                 </div>
                 <div class="mb-4">
-                    <input type="password" name="password" class="form-control" placeholder="Password" required>
+                    <input type="password" name="password" class="form-control" placeholder="Password (admin123)" required>
                 </div>
                 <button type="submit" name="login" class="btn btn-primary login-btn">
                     LOGIN
                 </button>
             </form>
 
+            <div class="text-center mt-3">
+                <small class="text-light">Default: admin / admin123</small>
+            </div>
         </div>
     </div>
 </div>
