@@ -34,6 +34,9 @@ if (!$role) {
 }
 
 // URL Apps Script (deployment yang sama juga dipakai api/dashboard.php).
+// NOTE: ini deployment terbaru dari branch Hanif-Dev. Kalau nanti deploy
+// ulang lagi dengan "New deployment" (bukan "New version"), URL ini akan
+// berubah lagi dan perlu diupdate manual di sini.
 const GAS_URL_INBOX = "https://script.google.com/macros/s/AKfycbz0VkjLBQXk2KCa5ko5v8lkfvbAev7kT58p50NoAgPv6z-wqqQ3j--c2Q_cSTgUr8yntQ/exec";
 
 $method = $_SERVER['REQUEST_METHOD'];

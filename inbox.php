@@ -1,6 +1,10 @@
 <?php
 require_once 'auth.php';
 $role = strtoupper($_SESSION['role'] ?? '');
+
+// Hanya role dengan kategori MSO (misal "MSOAREA2") yang boleh
+// mengupdate status/catatan/lampiran task di halaman ini.
+$canUpdate = (strpos($role, 'MSO') === 0);
 ?>
 
 <!DOCTYPE html>
@@ -33,7 +37,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             <!-- Navbar -->
             <nav class="navbar bg-white shadow-sm px-4 py-3">
             <div class="container-fluid">
-                
+
                 <!-- Brand / Page Title -->
                 <span class="navbar-brand fw-bold fs-4 text-dark">
                     Summary
@@ -47,11 +51,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
                     <!-- Profile -->
                     <div class="d-flex align-items-center gap-2">
-                        <img 
-                            src="https://i.pravatar.cc/40" 
-                            alt="Profile" 
-                            class="rounded-circle" 
-                            width="38" 
+                        <img
+                            src="https://i.pravatar.cc/40"
+                            alt="Profile"
+                            class="rounded-circle"
+                            width="38"
                             height="38">
 
                         <div>
@@ -61,7 +65,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     </div>
 
                     <!-- Logout -->
-                    <a href="logout.php" 
+                    <a href="logout.php"
                     class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1"
                     onclick="return confirm('Yakin ingin logout?')">
                         <i class="bi bi-box-arrow-right"></i>
@@ -129,7 +133,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                                         placeholder="Cari ID Task atau Customer"
                                         value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
 
-                                   <button 
+                                   <button
                                         type="button"
                                         id="btnCari"
                                         class="btn btn-primary">
@@ -168,7 +172,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                                 <select class="form-select" name="tipe" id="tipeFilter">
 
                                     <option value="">Semua Tipe</option>
-                                    <!-- Opsi diisi otomatis lewat JS dari data yang sudah dimuat -->
 
                                 </select>
 
@@ -184,7 +187,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                                 <select class="form-select" name="prioritas" id="prioritasFilter">
 
                                     <option value="">Semua Prioritas</option>
-                                    <!-- Opsi diisi otomatis lewat JS dari data yang sudah dimuat -->
 
                                 </select>
 
@@ -200,7 +202,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                                 <select class="form-select" name="sla" id="slaFilter">
 
                                     <option value="">Semua</option>
-                                    <!-- Opsi diisi otomatis lewat JS dari data yang sudah dimuat -->
 
                                 </select>
 
@@ -209,7 +210,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                             <!-- Tombol Filter -->
                             <div class="col-lg-1 d-grid">
 
-                              <button 
+                              <button
                                 type="button"
                                 id="btnFilter"
                                 class="btn btn-primary">
@@ -382,6 +383,13 @@ $role = strtoupper($_SESSION['role'] ?? '');
                                 Update Task
                             </h6>
 
+                            <?php if (!$canUpdate): ?>
+                            <div class="alert alert-secondary py-2 px-3 mb-3" id="updateDisabledNotice">
+                                <i class="bi bi-lock-fill"></i>
+                                Hanya role <strong>MSO</strong> yang dapat mengubah status task ini. Catatan tetap bisa diisi.
+                            </div>
+                            <?php endif; ?>
+
                             <div class="mb-3">
 
                                 <label class="form-label">
@@ -390,7 +398,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
                              <select
                                 id="updateStatus"
-                                class="form-select">
+                                class="form-select"
+                                <?= $canUpdate ? '' : 'disabled' ?>>
 
                                 <option value="Open">Open</option>
                                 <option value="Issue">Issue</option>
@@ -489,24 +498,19 @@ $role = strtoupper($_SESSION['role'] ?? '');
             });
         });
 
-    // Sekarang menunjuk ke proxy PHP lokal, BUKAN langsung ke Apps Script.
-    // URL Apps Script asli disimpan di server (api/inbox.php) dan tidak
-    // pernah dikirim ke browser. Role juga tidak dikirim dari client lagi -
-    // api/inbox.php mengambilnya sendiri dari $_SESSION di server, sehingga
-    // tidak bisa dipalsukan lewat query string.
+    // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
+    // bukan langsung di sisi client, supaya tidak terekspos ke publik.
     const API_URL = "api/inbox.php";
 
-    // Dipakai HANYA untuk namespace key localStorage (supaya cache per role
-    // tidak tercampur di browser yang sama). TIDAK dipakai lagi untuk
-    // otorisasi/filter data - itu sekarang murni ditentukan server
-    // (api/inbox.php) dari $_SESSION.
+    // Role user (dari session PHP) dikirim ke Apps Script sebagai
+    // query param, dipakai untuk filter kategori + wilayah data
     const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
-    // allTasksRaw = SEMUA data task hasil fetch dari server (tidak difilter).
-    // allTasks    = hasil SARINGAN dari allTasksRaw sesuai filter aktif saat ini,
-    //               inilah yang dipakai untuk tabel & pagination.
-    // Filter/search TIDAK PERNAH fetch ke server lagi setelah data awal dimuat -
-    // semuanya cuma menyaring array allTasksRaw yang sudah ada di memory.
+    // Hanya role dengan kategori MSO yang boleh update status/catatan/lampiran.
+    // Dihitung juga di PHP ($canUpdate) untuk disable elemen form saat render,
+    // dan di sini untuk jaga-jaga sisi JS (double-check sebelum kirim request).
+    const CAN_UPDATE = <?= $canUpdate ? 'true' : 'false' ?>;
+
     let allTasksRaw = [];
     let allTasks = [];
     let currentPage = 1;
@@ -523,7 +527,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
             .replace(/'/g, "&#039;");
     }
 
-    // ---- Helper: tampilkan notifikasi toast ----
     function showToast(message, isError = false) {
         const toastEl = document.getElementById("appToast");
         const toastBody = document.getElementById("appToastBody");
@@ -534,7 +537,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         toast.show();
     }
 
-    // ---- Ubah error fetch generik jadi pesan yang lebih jelas untuk user ----
     function explainFetchError(err) {
         if (err instanceof TypeError && /failed to fetch/i.test(err.message)) {
             return "Tidak bisa menghubungi server (kemungkinan deployment Apps Script " +
@@ -544,10 +546,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         return err.message;
     }
 
-    // ============================================================
-    // CACHE (localStorage) — supaya saat halaman dibuka lagi, data
-    // langsung tampil instan tanpa menunggu fetch ke server
-    // ============================================================
     const CACHE_KEY = "netops_inbox_task_cache_" + USER_ROLE;
 
     function saveCache(tasks) {
@@ -578,14 +576,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         } catch (e) { /* noop */ }
     }
 
-    // ============================================================
-    // FETCH DATA DARI SERVER
-    // Ini SATU-SATUNYA tempat yang boleh manggil fetch(GET) ke Apps
-    // Script untuk ambil daftar task. Dipanggil HANYA saat:
-    // 1) Halaman pertama kali dibuka
-    // 2) Tombol Refresh diklik
-    // Filter/search TIDAK memanggil fungsi ini sama sekali.
-    // ============================================================
     async function fetchTasksFromServer(options = {}) {
         const { silent = false, useCache = false } = options;
 
@@ -612,11 +602,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
         }
 
         try {
-            // Tidak ada parameter apa pun yang perlu dikirim dari client -
-            // role diambil dari session PHP di server (api/inbox.php),
-            // kita SELALU ambil semua data (yang sudah difilter server sesuai role),
-            // lalu filter tambahan (search/status/tipe/dst) dilakukan di client.
-            const res = await fetch(API_URL);
+            const url = API_URL + "?role=" + encodeURIComponent(USER_ROLE);
+            const res = await fetch(url);
 
             const rawText = await res.text();
 
@@ -680,11 +667,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         }
     }
 
-    // ============================================================
-    // ISI OPSI DROPDOWN Tipe / Prioritas / SLA SECARA OTOMATIS
-    // berdasarkan nilai unik yang benar-benar ada di data (bukan
-    // hardcode), supaya filter selalu cocok dengan data sebenarnya.
-    // ============================================================
     function populateFilterOptions(tasks) {
         fillSelectWithUniqueValues("tipeFilter", tasks, "tipe", "Semua Tipe");
         fillSelectWithUniqueValues("prioritasFilter", tasks, "prioritas", "Semua Prioritas");
@@ -695,7 +677,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
         const select = document.getElementById(selectId);
         if (!select) return;
 
-        const previousValue = select.value; // simpan pilihan sebelumnya kalau ada
+        const previousValue = select.value;
 
         const uniqueValues = Array.from(
             new Set(
@@ -712,15 +694,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
         select.innerHTML = html;
 
-        // Kembalikan pilihan sebelumnya kalau masih ada di daftar opsi baru
         if (previousValue && uniqueValues.includes(previousValue)) {
             select.value = previousValue;
         }
     }
 
-    // ============================================================
-    // FILTER + SEARCH — 100% CLIENT-SIDE, TIDAK ADA FETCH KE SERVER
-    // ============================================================
     function applyFiltersAndRender() {
 
         const keyword = document.getElementById("searchInput").value.toLowerCase().trim();
@@ -740,7 +718,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
             const slaL        = (task.sla || "").toLowerCase();
             const statusL     = (task.status || "").toLowerCase();
 
-            // SEARCH: cocok kalau salah satu kolom mengandung keyword
             if (keyword) {
                 const matchKeyword =
                     idL.includes(keyword) ||
@@ -755,7 +732,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 if (!matchKeyword) return false;
             }
 
-            // FILTER: harus cocok PERSIS kalau filter diisi
             if (status && statusL !== status) return false;
             if (tipe && tipeL !== tipe) return false;
             if (prioritas && prioritasL !== prioritas) return false;
@@ -827,7 +803,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 <td>${escapeHtml(task.prioritas)}</td>
                 <td>${escapeHtml(task.status)}</td>
              <td>
-             <button 
+             <button
                 class="btn btn-primary btn-sm"
                 type="button"
                 data-index="${globalIndex}"
@@ -845,7 +821,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     }
 
-    // Ambil task dari allTasks (hasil filter yang sedang tampil) berdasarkan index
     function showDetailByIndex(btn) {
         const index = parseInt(btn.getAttribute("data-index"), 10);
         const task = allTasks[index];
@@ -873,8 +848,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         if (lampiran) lampiran.value = "";
     }
 
-    // Hitung daftar nomor halaman yang ditampilkan, dengan "..." untuk
-    // bagian yang di-skip. Contoh hasil: [1,2,3,'...',12]
     function getPageNumbers(current, total, siblingCount = 1) {
 
         const totalVisible = siblingCount * 2 + 5;
@@ -968,7 +941,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     }
 
-    // ---- Helper: convert File -> base64 (tanpa prefix "data:...;base64,") ----
     function fileToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -978,12 +950,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         });
     }
 
-    // ============================================================
-    // SIMPAN UPDATE TASK
-    // Setelah sukses, TIDAK fetch ulang ke server. Cukup update objek
-    // task yang bersangkutan langsung di allTasksRaw (dan cache),
-    // lalu re-render dari data yang sudah ada di memory.
-    // ============================================================
     async function saveTaskUpdate() {
 
         const id = document.getElementById("selectedTaskId").value;
@@ -1007,14 +973,15 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 action: "update",
                 id: id,
                 status: newStatus,
-                catatan: newCatatan
+                catatan: newCatatan,
+                role: USER_ROLE // dikirim supaya Apps Script bisa validasi ulang di server
             };
 
             const fileInput = document.getElementById("updateLampiran");
             const file = fileInput && fileInput.files[0];
 
             if (file) {
-                const MAX_SIZE = 8 * 1024 * 1024; // 8MB
+                const MAX_SIZE = 8 * 1024 * 1024;
                 if (file.size > MAX_SIZE) {
                     throw new Error("Ukuran file lampiran terlalu besar (maks. 8MB).");
                 }
@@ -1055,32 +1022,31 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 throw new Error(data.error || "Update ditolak oleh server.");
             }
 
-            // ---- Update data di memory (allTasksRaw), TANPA fetch ulang ----
             const idx = allTasksRaw.findIndex(t => t.id === id);
+            const statusUnchanged = !data.statusUpdated && idx !== -1 && newStatus !== allTasksRaw[idx].status;
+
             if (idx !== -1) {
                 allTasksRaw[idx] = {
                     ...allTasksRaw[idx],
-                    status: newStatus,
+                    status: data.statusUpdated ? newStatus : allTasksRaw[idx].status,
                     catatan: newCatatan
                 };
             }
 
-            // Simpan perubahan ke cache juga, supaya konsisten kalau
-            // halaman di-reload nanti sebelum sempat Refresh manual.
             saveCache(allTasksRaw);
 
-            // Perbarui dropdown filter (siapa tahu status/tipe baru
-            // memunculkan opsi yang belum ada) dan render ulang tabel
-            // dengan filter yang SAMA seperti sebelumnya (tanpa reset).
             populateFilterOptions(allTasksRaw);
             applyFiltersAndRender();
 
-            // Perbarui juga panel Detail Task supaya konsisten dengan data baru
             if (idx !== -1) {
                 showDetail(allTasksRaw[idx]);
             }
 
-            showToast("Task " + id + " berhasil diperbarui.");
+            if (statusUnchanged) {
+                showToast("Catatan tersimpan. Status tidak berubah (hanya role MSO yang dapat mengubah status).", true);
+            } else {
+                showToast("Task " + id + " berhasil diperbarui.");
+            }
 
         } catch (err) {
             console.error("Gagal menyimpan update task:", err);
@@ -1111,32 +1077,9 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ---- Event Listeners ----
 
-    // Tombol Cari/Filter tetap ada dan berfungsi (klik langsung filter),
-    // tapi sekarang TIDAK WAJIB dipencet lagi - lihat auto-filter di bawah.
     document.getElementById("btnCari").addEventListener("click", () => applyFiltersAndRender());
     document.getElementById("btnFilter").addEventListener("click", () => applyFiltersAndRender());
 
-    // ============================================================
-    // AUTO-FILTER (live) - langsung filter begitu diketik/diubah,
-    // tanpa perlu pencet tombol Filter/Cari. 100% client-side.
-    // ============================================================
-
-    // Search: pakai debounce (jeda 300ms setelah berhenti mengetik) supaya
-    // tidak filter ulang di setiap huruf yang diketik - lebih ringan kalau
-    // datanya banyak, tapi tetap terasa instan.
-    let searchDebounceTimer = null;
-    document.getElementById("searchInput").addEventListener("input", () => {
-        clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => applyFiltersAndRender(), 300);
-    });
-
-    // Dropdown (Status/Tipe/Prioritas/SLA): langsung filter begitu dipilih,
-    // tidak perlu debounce karena "change" cuma terjadi sekali per pilihan.
-    ["statusFilter", "tipeFilter", "prioritasFilter", "slaFilter"].forEach(id => {
-        document.getElementById(id).addEventListener("change", () => applyFiltersAndRender());
-    });
-
-    // Refresh = satu-satunya tombol yang sengaja ambil data terbaru dari server.
     document.getElementById("btnRefresh").addEventListener("click", () => {
         clearCache();
         fetchTasksFromServer();
@@ -1146,16 +1089,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     document.getElementById("btnBatal").addEventListener("click", resetDetailForm);
 
-    // Cegah reload halaman kalau form filter di-submit lewat tombol Enter,
-    // dan langsung filter di client (tidak fetch ke server).
     document.getElementById("filterForm").addEventListener("submit", function (e) {
         e.preventDefault();
         applyFiltersAndRender();
     });
 
-    // Pertama kali halaman dibuka:
-    // 1) Tampilkan data dari cache secara instan (kalau ada)
-    // 2) Tetap ambil data terbaru dari server di background untuk menyegarkan cache
     window.onload = function () {
         fetchTasksFromServer({ useCache: true, silent: true });
     };
