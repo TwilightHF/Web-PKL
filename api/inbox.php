@@ -1,21 +1,11 @@
 <?php
 // api/inbox.php
-// Proxy antara browser (inbox.php, report.php) dan Google Apps Script.
+// Proxy antara browser (inbox.php) dan Google Apps Script.
 // Menangani dua hal:
-//   - GET  : ambil daftar SEMUA task (role diambil dari session, bukan dari client)
+//   - GET  : ambil daftar task (role diambil dari session, bukan dari client)
 //   - POST : update task (status/catatan/lampiran)
 // Tujuan: URL Apps Script tidak pernah terlihat di browser, dan role
 // tidak bisa dipalsukan lewat query string oleh user.
-//
-// CATATAN PENTING:
-// Apps Script (backup.gs) yang sama juga dipakai oleh api/dashboard.php.
-// doGet() di sana mengembalikan field "tasks" untuk Priority Order
-// dashboard (hanya task dengan TTD > 20 hari, field terbatas) DAN field
-// "allTasks" untuk daftar lengkap semua task (dipakai inbox & report).
-// Proxy ini SENGAJA mengambil "allTasks" lalu mengemasnya ulang sebagai
-// "tasks" di response miliknya sendiri, supaya frontend inbox.php &
-// report.php (yang mengharapkan field "tasks" = daftar lengkap) tidak
-// perlu diubah sama sekali.
 
 // Sengaja TIDAK pakai require_once 'auth.php', karena auth.php didesain
 // untuk halaman HTML (redirect ke login.php kalau belum login). Endpoint
@@ -33,16 +23,13 @@ if (!$role) {
     exit;
 }
 
-// URL Apps Script (deployment yang sama juga dipakai api/dashboard.php).
-// NOTE: ini deployment terbaru dari branch Hanif-Dev. Kalau nanti deploy
-// ulang lagi dengan "New deployment" (bukan "New version"), URL ini akan
-// berubah lagi dan perlu diupdate manual di sini.
-const GAS_URL_INBOX = "https://script.google.com/macros/s/AKfycbz0VkjLBQXk2KCa5ko5v8lkfvbAev7kT58p50NoAgPv6z-wqqQ3j--c2Q_cSTgUr8yntQ/exec";
+// URL Apps Script khusus INBOX (berbeda dari deployment dashboard).;
+const GAS_URL_INBOX = "https://script.google.com/macros/s/AKfycbycDX6ccCngy2vvmWRMKXWCtrlDtwRyYZtDBVZsGb9rAAypaw8_B3MZWRmZiqDiRX8LOA/exec";
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 // ---------------------------------------------------------------
-// GET: ambil daftar SEMUA task sesuai role user yang sedang login
+// GET: ambil daftar task sesuai role user yang sedang login
 // ---------------------------------------------------------------
 if ($method === 'GET') {
     $url = GAS_URL_INBOX . "?role=" . urlencode($role);
@@ -55,26 +42,7 @@ if ($method === 'GET') {
         exit;
     }
 
-    $data = json_decode($response, true);
-
-    if (!is_array($data)) {
-        http_response_code(502);
-        echo json_encode(['success' => false, 'error' => 'Response Apps Script tidak valid.']);
-        exit;
-    }
-
-    if (empty($data['success'])) {
-        // Teruskan apa adanya kalau Apps Script sendiri melaporkan error
-        echo json_encode($data);
-        exit;
-    }
-
-    // Ambil "allTasks" (daftar lengkap) dan kemas ulang sebagai "tasks"
-    // supaya kontrak data ke frontend inbox.php / report.php tetap sama.
-    echo json_encode([
-        'success' => true,
-        'tasks'   => $data['allTasks'] ?? []
-    ]);
+    echo $response;
     exit;
 }
 
@@ -100,8 +68,7 @@ if ($method === 'POST') {
     // Catatan: validasi tambahan bisa ditambahkan di sini, misalnya
     // memastikan role user ini memang berhak mengubah task dengan id
     // tersebut (butuh data tambahan dari Apps Script/Sheet untuk itu).
-
-    $ctx = stream_context_create([
+$ctx = stream_context_create([
         'http' => [
             'method'  => 'POST',
             'header'  => "Content-Type: text/plain;charset=utf-8",
