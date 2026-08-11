@@ -14,87 +14,35 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* ====== Khusus halaman Report ====== */
-
         .report-summary-card .icon-box {
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
+            width: 46px; height: 46px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; flex-shrink: 0;
         }
-
-        .report-summary-card h6 {
-            color: #6c757d;
-            font-size: .82rem;
-            margin-bottom: 4px;
-        }
-
-        .report-summary-card h3 {
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .report-summary-card .trend {
-            font-size: .78rem;
-        }
-
+        .report-summary-card h6 { color: #6c757d; font-size: .82rem; margin-bottom: 4px; }
+        .report-summary-card h3 { font-weight: 700; margin-bottom: 4px; }
+        .report-summary-card .trend { font-size: .78rem; }
         .bg-soft-primary { background: rgba(13,110,253,.12); color: #0d6efd; }
         .bg-soft-danger  { background: rgba(239,68,68,.12);  color: #dc3545; }
         .bg-soft-info    { background: rgba(59,130,246,.12); color: #0dcaf0; }
         .bg-soft-success { background: rgba(34,197,94,.12);  color: #198754; }
         .bg-soft-purple  { background: rgba(139,92,246,.15); color: #8b5cf6; }
         .bg-soft-warning { background: rgba(245,158,11,.15); color: #fd7e14; }
-
         .chart-box-sm { position: relative; height: 260px; }
         .chart-box-md { position: relative; height: 280px; }
-
         #doughnutCenterText {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            pointer-events: none;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; pointer-events: none;
         }
         #doughnutCenterText .num { font-size: 1.6rem; font-weight: 700; display: block; line-height: 1; }
         #doughnutCenterText .lbl { font-size: .75rem; color: #6c757d; }
-
-        .legend-dot {
-            display: inline-block;
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-
-        .status-legend-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            font-size: .85rem;
-        }
-
-        .top-customer-table td, .top-customer-table th {
-            font-size: .88rem;
-        }
-
-        #periodPicker {
-            cursor: pointer;
-            background: white;
-        }
-
-        .table-sm-badge {
-            font-size: .72rem;
-            padding: 5px 10px;
-        }
+        .legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+        .status-legend-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: .85rem; }
+        .top-customer-table td, .top-customer-table th { font-size: .88rem; }
+        #periodPicker { cursor: pointer; background: white; }
+        .table-sm-badge { font-size: .72rem; padding: 5px 10px; }
     </style>
 
-    <!-- DataTables (dipakai untuk Task Detail Report, konsisten dgn inbox.php) -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.css">
 </head>
 <body>
@@ -102,7 +50,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         <div id="sidebar-container"></div>
 
         <div class="content flex-grow-1">
-            <!-- Navbar -->
             <nav class="navbar bg-white shadow-sm px-4 py-3">
                 <span class="navbar-brand fw-bold fs-4">Report</span>
                 <div class="ms-auto d-flex align-items-center gap-3">
@@ -120,7 +67,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
             <div class="container-fluid p-4">
 
-                <!-- Judul + Filter Bar -->
                 <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
                     <div>
                         <h3 class="mb-0 fw-bold">Report</h3>
@@ -165,7 +111,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     </div>
                 </div>
 
-                <!-- Summary Cards -->
                 <div class="row g-3">
                     <div class="col-lg-2 col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
@@ -241,7 +186,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     </div>
                 </div>
 
-                <!-- Row 2: Status Donut / Trend / Priority -->
                 <div class="row mt-4 g-3">
                     <div class="col-lg-4">
                         <div class="card shadow-sm h-100">
@@ -289,7 +233,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     </div>
                 </div>
 
-                <!-- Row 3: Area / SLA over time / Top customer -->
                 <div class="row mt-3 g-3">
                     <div class="col-lg-4">
                         <div class="card shadow-sm h-100">
@@ -333,7 +276,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     </div>
                 </div>
 
-                <!-- Task Detail Report -->
                 <div class="card shadow-sm mt-4">
                     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <span class="fw-bold">Task Detail Report</span>
@@ -376,19 +318,18 @@ $role = strtoupper($_SESSION['role'] ?? '');
                                         <th>ID Task</th>
                                         <th>Tipe</th>
                                         <th>Customer</th>
-                                        <th>Regional</th>
-                                        <th>District</th>
+                                        <th>Area</th>
                                         <th>Milestone</th>
                                         <th>SoW</th>
                                         <th>Status</th>
                                         <th>Waktu Dibuat</th>
-                                        <th>TTD (Hari)</th>
+                                        <th>Waktu On Air</th>
                                         <th>SLA Status</th>
                                         <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="detailTableBody">
-                                    <tr><td colspan="12" class="text-center text-muted py-4">Memuat data...</td></tr>
+                                    <tr><td colspan="11" class="text-center text-muted py-4">Memuat data...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -406,7 +347,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         </div>
     </div>
 
-    <!-- Modal Detail Task -->
     <div class="modal fade" id="taskDetailModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -419,8 +359,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                         <tr><th width="40%">ID Task</th><td id="mdId">-</td></tr>
                         <tr><th>Tipe</th><td id="mdTipe">-</td></tr>
                         <tr><th>Customer</th><td id="mdCustomer">-</td></tr>
-                        <tr><th>Regional</th><td id="mdArea">-</td></tr>
-                        <tr><th>District</th><td id="mdDistrict">-</td></tr>
+                        <tr><th>Area</th><td id="mdArea">-</td></tr>
                         <tr><th>Milestone</th><td id="mdPrioritas">-</td></tr>
                         <tr><th>SoW</th><td id="mdSla">-</td></tr>
                         <tr><th>Status</th><td id="mdStatus">-</td></tr>
@@ -433,7 +372,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="appToast" class="toast align-items-center text-white border-0" role="alert">
             <div class="d-flex">
@@ -447,9 +385,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-    // ============================================================
-    // Load sidebar & tandai menu aktif
-    // ============================================================
     fetch('sidebar.html').then(res => res.text()).then(html => {
         document.getElementById('sidebar-container').innerHTML = html;
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
@@ -460,24 +395,16 @@ $role = strtoupper($_SESSION['role'] ?? '');
     });
 
     // ============================================================
-    // Sumber data: Apps Script INBOX (inbox_code.gs), sama seperti
-    // yang dipakai inbox.php. Field yang tersedia dari sumber ini:
-    // id, tipe, customer, area, prioritas, sisa_waktu, sla, status,
-    // dibuat, catatan. TIDAK ADA field responsibility/oa_date/district/
-    // sow/milestone - jadi widget "Task by Responsibility", "On Air
-    // Trend", dan "Task by District" tidak akan punya data nyata
-    // (fallback ke "Tidak diketahui"/kosong) selama pakai sumber ini.
+    // Sumber data: api/report_data.php (proxy PHP ke Apps Script mode
+    // ?report=1), yang mengembalikan field sesuai buildReportTasks():
+    //   id, tipe, customer, area, district, sow, milestone, status,
+    //   responsibility, priorityDetail, dibuat, oa_date, ttd, catatan
     // ============================================================
-<<<<<<< HEAD
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbycDX6ccCngy2vvmWRMKXWCtrlDtwRyYZtDBVZsGb9rAAypaw8_B3MZWRmZiqDiRX8LOA/exec";
-    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
-    const API_URL = GAS_URL + "?role=" + encodeURIComponent(USER_ROLE);
-=======
     const API_URL = "api/report_data.php";
->>>>>>> 096f9a8cadd9368ebbef3570f0e0615147a848a3
 
-    let allTasksRaw = [];   // semua task hasil fetch dari server
-    let filteredTasks = []; // hasil setelah filter (periode, area, sla, prioritas, search, quick filter)
+    let allTasksRaw = [];
+    let allOnAirRaw = [];  // data khusus On Air Trend (AZ = OA, tanpa filter role)
+    let filteredTasks = [];
     let currentPage = 1;
     const rowsPerPage = 10;
 
@@ -503,7 +430,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         new bootstrap.Toast(toastEl, { delay: 3000 }).show();
     }
 
-    // ---- Normalisasi status mentah -> salah satu dari: Open, On Progress, Waiting, Closed ----
     function normalizeStatus(raw) {
         const s = (raw || "").toString().toLowerCase();
         if (s.includes("close")) return "Closed";
@@ -514,7 +440,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         return "Open";
     }
 
-    // ---- Parse tanggal dari field 'dibuat' (format bervariasi tergantung sheet) ----
     function parseTaskDate(value) {
         if (!value) return null;
         const d = new Date(value);
@@ -526,9 +451,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
     }
 
-    // ============================================================
-    // FETCH DATA
-    // ============================================================
     async function fetchData() {
         try {
             const res = await fetch(API_URL);
@@ -545,6 +467,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             }
 
             allTasksRaw = Array.isArray(data.tasks) ? data.tasks : [];
+            allOnAirRaw = Array.isArray(data.onAirTrend) ? data.onAirTrend : [];
 
             populateFilterOptions();
             applyFilters();
@@ -572,25 +495,28 @@ $role = strtoupper($_SESSION['role'] ?? '');
         )).sort((a, b) => a.localeCompare(b, "id"));
     }
 
+    // ------------------------------------------------------------
+    // Mapping field (mengikuti buildReportTasks di code.gs):
+    //   filterArea      -> t.area       (Region / Z)
+    //   filterSla       -> t.sow        (Sow Order / I)
+    //   filterPrioritas -> t.milestone  (Milestone / O)
+    // ------------------------------------------------------------
     function populateFilterOptions() {
-        fillSelect("filterArea", uniqueValues("area"), "Semua");       // Regional -> kolom Z
-        fillSelect("filterSla", uniqueValues("sow"), "Semua");         // SoW -> kolom I (Sow Order)
-        fillSelect("filterPrioritas", uniqueValues("milestone"), "Semua"); // Milestone -> kolom O
+        fillSelect("filterArea", uniqueValues("area"), "Semua");
+        fillSelect("filterSla", uniqueValues("sow"), "Semua");
+        fillSelect("filterPrioritas", uniqueValues("milestone"), "Semua");
         fillSelect("quickTipe", uniqueValues("tipe"), "Semua Tipe");
 
         const statuses = Array.from(new Set(allTasksRaw.map(t => normalizeStatus(t.status))));
         fillSelect("quickStatus", statuses, "Semua Status");
     }
 
-    // ============================================================
-    // FILTERING (100% client-side)
-    // ============================================================
     function applyFilters() {
         const dateFrom = document.getElementById("dateFrom").value ? new Date(document.getElementById("dateFrom").value) : null;
         const dateTo = document.getElementById("dateTo").value ? new Date(document.getElementById("dateTo").value) : null;
-        const area = document.getElementById("filterArea").value.toLowerCase();     // Regional (kolom Z)
-        const sow = document.getElementById("filterSla").value.toLowerCase();       // SoW (kolom I)
-        const milestone = document.getElementById("filterPrioritas").value.toLowerCase(); // Milestone (kolom O)
+        const area = document.getElementById("filterArea").value.toLowerCase();
+        const sow = document.getElementById("filterSla").value.toLowerCase();
+        const milestone = document.getElementById("filterPrioritas").value.toLowerCase();
         const search = document.getElementById("detailSearch").value.toLowerCase().trim();
         const quickStatus = document.getElementById("quickStatus").value.toLowerCase();
         const quickTipe = document.getElementById("quickTipe").value.toLowerCase();
@@ -607,7 +533,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             if (quickTipe && (t.tipe || "").toLowerCase() !== quickTipe) return false;
 
             if (search) {
-                const hay = [t.id, t.tipe, t.customer, t.area, t.district, t.sow, t.milestone, t.status]
+                const hay = [t.id, t.tipe, t.customer, t.area, t.milestone, t.status]
                     .map(v => (v || "").toString().toLowerCase()).join(" ");
                 if (!hay.includes(search)) return false;
             }
@@ -630,18 +556,10 @@ $role = strtoupper($_SESSION['role'] ?? '');
         renderDetailPagination();
     }
 
-    // ============================================================
-    // SUMMARY CARDS
-    // ============================================================
     function renderSummaryCards() {
         const total = filteredTasks.length;
-<<<<<<< HEAD
         let open = 0, progress = 0, closed = 0;
-=======
-        let open = 0, progress = 0, closed = 0, compliant = 0;
->>>>>>> 096f9a8cadd9368ebbef3570f0e0615147a848a3
-        let sisaSum = 0, sisaCount = 0;
-        let onTrack = 0, slaKnown = 0;
+        let ttdSum = 0, ttdCount = 0, onTrack = 0;
 
         filteredTasks.forEach(t => {
             const st = normalizeStatus(t.status);
@@ -649,12 +567,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
             if (st === "On Progress") progress++;
             if (st === "Closed") closed++;
 
-            // SLA Compliance: Count kolom BI (TTD) < 30 hari / Total task
             const ttd = parseFloat(t.ttd);
-            if (!isNaN(ttd) && ttd < 30) compliant++;
-
-            // Rata-rata waktu selesai: Average kolom BI, khusus task Closed
-            if (st === "Closed" && !isNaN(ttd)) { sisaSum += ttd; sisaCount++; }
+            if (!isNaN(ttd)) {
+                ttdSum += ttd; ttdCount++;
+                if (ttd <= 20) onTrack++; // konsisten dgn ambang "Priority Order > 20 Hari"
+            }
         });
 
         document.getElementById("sumTotal").textContent = total;
@@ -662,17 +579,16 @@ $role = strtoupper($_SESSION['role'] ?? '');
         document.getElementById("sumProgress").textContent = progress;
         document.getElementById("sumClosed").textContent = closed;
 
-        const compliance = total > 0 ? Math.round((compliant / total) * 1000) / 10 : 0;
+        const compliance = ttdCount > 0 ? Math.round((onTrack / ttdCount) * 1000) / 10 : 0;
         document.getElementById("sumSlaCompliance").textContent = compliance + "%";
 
-        const avgDays = sisaCount > 0 ? Math.round((sisaSum / sisaCount) * 10) / 10 : null;
+        const avgDays = ttdCount > 0 ? Math.round((ttdSum / ttdCount) * 10) / 10 : null;
         document.getElementById("sumAvgTime").textContent = avgDays !== null ? avgDays + " Hari" : "-";
     }
 
     // ============================================================
     // CHART: Task by Responsibility (doughnut)
-    // CATATAN: field `responsibility` TIDAK dikirim oleh sumber data
-    // inbox saat ini, sehingga semua task akan jatuh ke "Tidak diketahui".
+    // Sumber: t.responsibility (kolom AZ)
     // ============================================================
     function renderResponsibilityDoughnut() {
         const counts = {};
@@ -683,8 +599,8 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
         const labels = Object.keys(counts).filter(k => counts[k] > 0);
         const data = labels.map(l => counts[l]);
-        const colorMap = { MSO: "#ef4444", MBB: "#3b82f6", SS: "#f59e0b", ED: "#22c55e", "Tidak diketahui": "#6c757d" };
-        const palette = ["#8b5cf6", "#ec4899", "#0dcaf0", "#fd7e14"];
+        const colorMap = { "SO": "#ef4444", "MBB/SO": "#3b82f6", "DWS": "#f59e0b", "TA/ED": "#22c55e", "OA": "#8b5cf6", "Tidak diketahui": "#6c757d" };
+        const palette = ["#0dcaf0", "#fd7e14", "#20c997", "#d63384"];
         const colors = labels.map((l, i) => colorMap[l] || palette[i % palette.length]);
 
         if (doughnutChart) doughnutChart.destroy();
@@ -716,17 +632,9 @@ $role = strtoupper($_SESSION['role'] ?? '');
     }
 
     // ============================================================
-<<<<<<< HEAD
     // CHART: On Air Trend
-    // CATATAN: field `oa_date` dan `responsibility` (utk filter AZ=OA)
-    // TIDAK dikirim oleh sumber data inbox saat ini, sehingga chart
-    // ini akan selalu kosong sampai field tsb ditambahkan ke inbox_code.gs.
-=======
-    // CHART: On Air Trend (jumlah task berstatus Responsibility "OA"
-    // per hari/minggu/bulan, sesuai spek: Column AZ = "OA")
-    // Sumbu waktu memakai `t.oa_date` (tanggal New Site On Air, kolom
-    // AU/T pada backup.gs). Task tanpa tanggal OA tidak ikut dihitung.
->>>>>>> 096f9a8cadd9368ebbef3570f0e0615147a848a3
+    // Sumber: allOnAirRaw (khusus AZ="OA", TANPA filter role - terpisah
+    // dari filteredTasks). Tetap ikut filter rentang tanggal saja.
     // ============================================================
     function groupKeyForDate(d, grouping) {
         if (!d) return "Tidak diketahui";
@@ -743,24 +651,16 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     function renderOnAirTrendChart() {
         const grouping = document.getElementById("trendGrouping").value;
+        const dateFrom = document.getElementById("dateFrom").value ? new Date(document.getElementById("dateFrom").value) : null;
+        const dateTo = document.getElementById("dateTo").value ? new Date(document.getElementById("dateTo").value) : null;
         const buckets = {}; // key -> {onAir, _sortDate}
 
-        filteredTasks.forEach(t => {
-<<<<<<< HEAD
-            // Column AZ = OA: hanya task yang responsibility-nya persis "OA"
-            const resp = (t.responsibility || "").toString().trim().toUpperCase();
-            if (resp !== "OA") return;
-
+        allOnAirRaw.forEach(t => {
             const d = parseTaskDate(t.oa_date);
             if (!d) return;
-=======
-            // Sesuai spek: Column AZ (Responsibility) = "OA"
-            if ((t.responsibility || "").toString().trim().toUpperCase() !== "OA") return;
+            if (dateFrom && d < dateFrom) return;
+            if (dateTo && d > new Date(dateTo.getTime() + 86399999)) return;
 
-            const oaRaw = t.oa_date || t.tanggal_oa || t.on_air_date || "";
-            const d = parseTaskDate(oaRaw);
-            if (!d) return; // hanya task yang sudah punya tanggal On Air yang dihitung
->>>>>>> 096f9a8cadd9368ebbef3570f0e0615147a848a3
             const key = groupKeyForDate(d, grouping);
             if (!buckets[key]) buckets[key] = { onAir: 0, _sortDate: d.getTime() };
             buckets[key].onAir++;
@@ -788,36 +688,24 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ============================================================
     // CHART: Task by Priority (horizontal bar)
-<<<<<<< HEAD
-    // Sumber: t.prioritas (dikirim langsung oleh inbox_code.gs)
-=======
-    // Sesuai spek: Column I (SoW) = "Access Combat", Column U != "Closed",
-    // dikelompokkan berdasarkan label detail (Column AX/W, mis. "L0-Ready",
-    // "L1-Ready", "Issue - Site BTS", dst).
->>>>>>> 096f9a8cadd9368ebbef3570f0e0615147a848a3
+    // Sumber: t.milestone (kolom O / Milestone) - label sesuai isi
+    // asli spreadsheet, mis. "05. L0 - Perizinan", "0. Issue - Site BTS"
     // ============================================================
     function renderPriorityChart() {
         const counts = {};
         filteredTasks.forEach(t => {
-<<<<<<< HEAD
-            const p = (t.prioritas || "Tidak diketahui").toString().trim() || "Tidak diketahui";
+            const p = (t.milestone || "Tidak diketahui").toString().trim() || "Tidak diketahui";
             counts[p] = (counts[p] || 0) + 1;
         });
 
         const labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 10);
-=======
-            const sow = (t.sow || "").toString().trim().toLowerCase();
-            if (sow !== "access combat") return;
-            if (normalizeStatus(t.status) === "Closed") return;
-
-            const p = (t.priorityDetail || "Tidak diketahui").toString().trim() || "Tidak diketahui";
-            counts[p] = (counts[p] || 0) + 1;
-        });
-
-        const labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
->>>>>>> 096f9a8cadd9368ebbef3570f0e0615147a848a3
         const data = labels.map(l => counts[l]);
-        const colors = labels.map(l => l.toLowerCase().includes("issue") ? "#ef4444" : "#3b82f6");
+        const colors = labels.map(l => {
+            const low = l.toLowerCase();
+            if (low.includes("issue")) return "#ef4444";
+            if (low.includes("ready")) return "#22c55e";
+            return "#3b82f6";
+        });
 
         if (priorityChart) priorityChart.destroy();
         priorityChart = new Chart(document.getElementById("priorityChart"), {
@@ -861,28 +749,28 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ============================================================
     // CHART: SLA Compliance Over Time
-    // Sesuai spek: subset task dengan Column AZ (Responsibility) = "OA",
-    // compliance% per periode = persentase task pada subset itu yang
-    // TIDAK melewati ambang batas Column BI (TTD) > 30 hari.
+    // Berbasis t.ttd (kolom BI): dianggap "on track" kalau <= 20 hari.
+    // Grouping TETAP bulanan - TIDAK mengikuti dropdown Harian/Mingguan/
+    // Bulanan milik "On Air Trend" (dua chart ini independen).
     // ============================================================
     function renderSlaTrendChart() {
-        const grouping = document.getElementById("trendGrouping").value;
-        const buckets = {}; // key -> {compliant, total, _sortDate}
+        const grouping = "monthly";
+        const buckets = {}; // key -> {onTrack, known, _sortDate}
 
         filteredTasks.forEach(t => {
-            if ((t.responsibility || "").toString().trim().toUpperCase() !== "OA") return;
-
-            const d = parseTaskDate(t.oa_date || t.dibuat);
+            const d = parseTaskDate(t.dibuat);
             const key = groupKeyForDate(d, grouping);
-            if (!buckets[key]) buckets[key] = { compliant: 0, total: 0, _sortDate: d ? d.getTime() : 0 };
+            if (!buckets[key]) buckets[key] = { onTrack: 0, known: 0, _sortDate: d ? d.getTime() : 0 };
 
             const ttd = parseFloat(t.ttd);
-            buckets[key].total++;
-            if (!isNaN(ttd) && !(ttd > 30)) buckets[key].compliant++; // BI > 30 = tidak compliant
+            if (!isNaN(ttd)) {
+                buckets[key].known++;
+                if (ttd <= 20) buckets[key].onTrack++;
+            }
         });
 
         const keys = Object.keys(buckets).sort((a, b) => buckets[a]._sortDate - buckets[b]._sortDate);
-        const data = keys.map(k => buckets[k].total > 0 ? Math.round((buckets[k].compliant / buckets[k].total) * 1000) / 10 : null);
+        const data = keys.map(k => buckets[k].known > 0 ? Math.round((buckets[k].onTrack / buckets[k].known) * 1000) / 10 : null);
 
         if (slaTrendChart) slaTrendChart.destroy();
         slaTrendChart = new Chart(document.getElementById("slaTrendChart"), {
@@ -902,8 +790,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ============================================================
     // TABLE: Top 5 District
-    // CATATAN: field `district` TIDAK dikirim oleh sumber data f
-    // saat ini, sehingga seluruh task akan jatuh ke "Tidak diketahui".
+    // Sumber: t.district (kolom WITEL / Y)
     // ============================================================
     function renderTopDistricts() {
         const counts = {};
@@ -928,14 +815,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
         `).join("");
     }
 
-    // ============================================================
-    // TABLE: Task Detail Report (dengan pagination client-side)
-    // ============================================================
     function slaBadge(ttdVal) {
         const ttd = parseFloat(ttdVal);
         if (isNaN(ttd)) return `<span class="badge bg-secondary table-sm-badge">-</span>`;
-        if (ttd > 30) return `<span class="badge bg-danger table-sm-badge">Over SLA</span>`;
-        return `<span class="badge bg-success table-sm-badge">On Track</span>`;
+        if (ttd <= 20) return `<span class="badge bg-success table-sm-badge">On Track</span>`;
+        return `<span class="badge bg-danger table-sm-badge">Over SLA</span>`;
     }
 
     function statusBadge(statusRaw) {
@@ -950,7 +834,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
         const tbody = document.getElementById("detailTableBody");
 
         if (pageRows.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="12" class="text-center text-muted py-4">Tidak ada data yang cocok dengan filter.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center text-muted py-4">Tidak ada data yang cocok dengan filter.</td></tr>`;
         } else {
             tbody.innerHTML = pageRows.map(t => `
                 <tr>
@@ -958,12 +842,11 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     <td>${escapeHtml(t.tipe)}</td>
                     <td>${escapeHtml(t.customer)}</td>
                     <td>${escapeHtml(t.area)}</td>
-                    <td>${escapeHtml(t.district)}</td>
                     <td>${escapeHtml(t.milestone)}</td>
                     <td>${escapeHtml(t.sow)}</td>
                     <td>${statusBadge(t.status)}</td>
                     <td>${escapeHtml(t.dibuat) || "-"}</td>
-                    <td>${t.ttd ?? "-"}</td>
+                    <td>${escapeHtml(t.oa_date) || "-"}</td>
                     <td>${slaBadge(t.ttd)}</td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-outline-primary btn-view-detail" data-id="${escapeHtml(t.id)}">
@@ -1029,29 +912,25 @@ $role = strtoupper($_SESSION['role'] ?? '');
         document.getElementById("mdTipe").textContent = t.tipe || "-";
         document.getElementById("mdCustomer").textContent = t.customer || "-";
         document.getElementById("mdArea").textContent = t.area || "-";
-        document.getElementById("mdDistrict").textContent = t.district || "-";
         document.getElementById("mdPrioritas").textContent = t.milestone || "-";
         document.getElementById("mdSla").textContent = t.sow || "-";
         document.getElementById("mdStatus").textContent = normalizeStatus(t.status);
-        document.getElementById("mdSisaWaktu").textContent = (t.ttd ?? "-").toString();
+        document.getElementById("mdSisaWaktu").textContent = (t.ttd !== undefined && t.ttd !== null && t.ttd !== "") ? t.ttd + " Hari" : "-";
         document.getElementById("mdDibuat").textContent = t.dibuat || "-";
         document.getElementById("mdCatatan").textContent = t.catatan || "-";
 
         new bootstrap.Modal(document.getElementById("taskDetailModal")).show();
     }
 
-    // ============================================================
-    // EXPORT CSV (dari data yang sedang difilter/ditampilkan)
-    // ============================================================
     function exportCsv() {
         if (filteredTasks.length === 0) {
             showToast("Tidak ada data untuk diexport.", true);
             return;
         }
 
-        const headers = ["ID Task", "Tipe", "Customer", "Regional", "District", "Milestone", "SoW", "Status", "Waktu Dibuat", "TTD (Hari)"];
+        const headers = ["ID Task", "Tipe", "Customer", "Area", "Milestone", "SoW", "Status", "Waktu Dibuat"];
         const rows = filteredTasks.map(t => [
-            t.id, t.tipe, t.customer, t.area, t.district, t.milestone, t.sow, normalizeStatus(t.status), t.dibuat, t.ttd
+            t.id, t.tipe, t.customer, t.area, t.milestone, t.sow, normalizeStatus(t.status), t.dibuat
         ]);
 
         const csvContent = [headers, ...rows]
@@ -1069,9 +948,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
         URL.revokeObjectURL(url);
     }
 
-    // ============================================================
-    // EVENT LISTENERS
-    // ============================================================
     ["dateFrom", "dateTo", "filterArea", "filterSla", "filterPrioritas", "quickStatus", "quickTipe"]
         .forEach(id => document.getElementById(id).addEventListener("change", applyFilters));
 
@@ -1079,7 +955,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     document.getElementById("trendGrouping").addEventListener("change", () => {
         renderOnAirTrendChart();
-        renderSlaTrendChart();
     });
 
     document.getElementById("btnToggleQuickFilter").addEventListener("click", () => {
@@ -1100,9 +975,6 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     document.getElementById("btnExport").addEventListener("click", exportCsv);
 
-    // ============================================================
-    // INIT
-    // ============================================================
     fetchData();
     </script>
 </body>

@@ -26,7 +26,7 @@ if (!$role) {
 // URL Apps Script deployment yang SAMA dengan api/dashboard.php,
 // karena buildReportTasks() ditambahkan pada script (backup.gs) yang
 // sama dengan yang melayani endpoint Dashboard.
-const GAS_URL_DASHBOARD = "https://script.google.com/macros/s/AKfycbwHeE2T6mxmgJdcMquNtiqK1JD8fQ-FplMiRby8Wd-yQaVDlOhMbVxcW5XvZlXaxRNulg/exec";
+const GAS_URL_DASHBOARD = "https://script.google.com/macros/s/AKfycbxPuLWeJV1uWoYMUeUePLkvAd4k3ZxsRkljo8iw4AUVUV5cn-wd8yhlfg-pVPqyfGxf/exec";
 
 $url = GAS_URL_DASHBOARD . "?report=1&role=" . urlencode($role);
 
