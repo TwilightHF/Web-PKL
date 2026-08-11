@@ -139,21 +139,21 @@ $role = strtoupper($_SESSION['role'] ?? '');
                         </div>
 
                         <div>
-                            <label class="form-label small text-muted mb-1">Area</label>
+                            <label class="form-label small text-muted mb-1">Regional</label>
                             <select id="filterArea" class="form-select form-select-sm">
                                 <option value="">Semua</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="form-label small text-muted mb-1">SLA</label>
+                            <label class="form-label small text-muted mb-1">SoW</label>
                             <select id="filterSla" class="form-select form-select-sm">
                                 <option value="">Semua</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="form-label small text-muted mb-1">Prioritas</label>
+                            <label class="form-label small text-muted mb-1">Milestone</label>
                             <select id="filterPrioritas" class="form-select form-select-sm">
                                 <option value="">Semua</option>
                             </select>
@@ -245,7 +245,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 <div class="row mt-4 g-3">
                     <div class="col-lg-4">
                         <div class="card shadow-sm h-100">
-                            <div class="card-header fw-bold">Task by Status</div>
+                            <div class="card-header fw-bold">Task by Responsibility</div>
                             <div class="card-body">
                                 <div class="chart-box-sm">
                                     <canvas id="statusDoughnut"></canvas>
@@ -262,7 +262,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                     <div class="col-lg-4">
                         <div class="card shadow-sm h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <span class="fw-bold">Task Trend</span>
+                                <span class="fw-bold">On Air Trend</span>
                                 <select id="trendGrouping" class="form-select form-select-sm" style="width:auto;">
                                     <option value="daily">Harian</option>
                                     <option value="weekly">Mingguan</option>
@@ -315,12 +315,12 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
                     <div class="col-lg-4">
                         <div class="card shadow-sm h-100">
-                            <div class="card-header fw-bold">Task by Customer (Top 5)</div>
+                            <div class="card-header fw-bold">Task by District (Top 5)</div>
                             <div class="card-body">
                                 <table class="table top-customer-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Customer</th>
+                                            <th>District</th>
                                             <th class="text-end">Total Task</th>
                                         </tr>
                                     </thead>
@@ -609,12 +609,12 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     function renderAll() {
         renderSummaryCards();
-        renderStatusDoughnut();
-        renderTrendChart();
+        renderResponsibilityDoughnut();
+        renderOnAirTrendChart();
         renderPriorityChart();
         renderAreaChart();
         renderSlaTrendChart();
-        renderTopCustomers();
+        renderTopDistricts();
         renderDetailTable();
         renderDetailPagination();
     }
@@ -656,19 +656,24 @@ $role = strtoupper($_SESSION['role'] ?? '');
     }
 
     // ============================================================
-    // CHART: Task by Status (doughnut)
+    // CHART: Task by Responsibility (doughnut)
+    // Catatan: field `t.responsibility` diharapkan dikirim dari API
+    // (mis. MSO / MBB / SS / ED, mengikuti kategori role di GAS).
+    // Jika field belum tersedia di response api/inbox.php, seluruh
+    // task akan jatuh ke kategori "Tidak diketahui".
     // ============================================================
-    function renderStatusDoughnut() {
-        const counts = { Open: 0, "On Progress": 0, Waiting: 0, Closed: 0, Issue: 0 };
+    function renderResponsibilityDoughnut() {
+        const counts = {};
         filteredTasks.forEach(t => {
-            const st = normalizeStatus(t.status);
-            counts[st] = (counts[st] || 0) + 1;
+            const resp = (t.responsibility || t.tanggung_jawab || "Tidak diketahui").toString().trim() || "Tidak diketahui";
+            counts[resp] = (counts[resp] || 0) + 1;
         });
 
         const labels = Object.keys(counts).filter(k => counts[k] > 0);
         const data = labels.map(l => counts[l]);
-        const colorMap = { Open: "#ef4444", "On Progress": "#3b82f6", Waiting: "#f59e0b", Closed: "#22c55e", Issue: "#a855f7" };
-        const colors = labels.map(l => colorMap[l] || "#6c757d");
+        const colorMap = { MSO: "#ef4444", MBB: "#3b82f6", SS: "#f59e0b", ED: "#22c55e", "Tidak diketahui": "#6c757d" };
+        const palette = ["#8b5cf6", "#ec4899", "#0dcaf0", "#fd7e14"];
+        const colors = labels.map((l, i) => colorMap[l] || palette[i % palette.length]);
 
         if (doughnutChart) doughnutChart.destroy();
         doughnutChart = new Chart(document.getElementById("statusDoughnut"), {
@@ -699,7 +704,10 @@ $role = strtoupper($_SESSION['role'] ?? '');
     }
 
     // ============================================================
-    // CHART: Task Trend (per hari/minggu/bulan berdasarkan tanggal dibuat)
+    // CHART: On Air Trend (jumlah site/task On Air per hari/minggu/bulan)
+    // Catatan: field `t.oa_date` (tanggal New Site On Air) diharapkan
+    // dikirim dari API, mengikuti sumber kolom AU/T pada backup.gs.
+    // Task tanpa tanggal OA tidak ikut dihitung pada chart ini.
     // ============================================================
     function groupKeyForDate(d, grouping) {
         if (!d) return "Tidak diketahui";
@@ -714,18 +722,17 @@ $role = strtoupper($_SESSION['role'] ?? '');
         return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
     }
 
-    function renderTrendChart() {
+    function renderOnAirTrendChart() {
         const grouping = document.getElementById("trendGrouping").value;
-        const buckets = {}; // key -> {Open, 'On Progress', Closed}
+        const buckets = {}; // key -> {onAir, _sortDate}
 
         filteredTasks.forEach(t => {
-            const d = parseTaskDate(t.dibuat);
+            const oaRaw = t.oa_date || t.tanggal_oa || t.on_air_date || "";
+            const d = parseTaskDate(oaRaw);
+            if (!d) return; // hanya task yang sudah punya tanggal On Air yang dihitung
             const key = groupKeyForDate(d, grouping);
-            if (!buckets[key]) buckets[key] = { Open: 0, "On Progress": 0, Closed: 0, _sortDate: d ? d.getTime() : 0 };
-            const st = normalizeStatus(t.status);
-            if (st === "Open" || st === "Issue" || st === "Waiting") buckets[key].Open++;
-            else if (st === "On Progress") buckets[key]["On Progress"]++;
-            else if (st === "Closed") buckets[key].Closed++;
+            if (!buckets[key]) buckets[key] = { onAir: 0, _sortDate: d.getTime() };
+            buckets[key].onAir++;
         });
 
         const keys = Object.keys(buckets).sort((a, b) => buckets[a]._sortDate - buckets[b]._sortDate);
@@ -736,9 +743,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
             data: {
                 labels: keys,
                 datasets: [
-                    { label: "Open", data: keys.map(k => buckets[k].Open), borderColor: "#ef4444", backgroundColor: "rgba(239,68,68,.1)", tension: .3 },
-                    { label: "On Progress", data: keys.map(k => buckets[k]["On Progress"]), borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,.1)", tension: .3 },
-                    { label: "Closed", data: keys.map(k => buckets[k].Closed), borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,.1)", tension: .3 }
+                    { label: "On Air", data: keys.map(k => buckets[k].onAir), borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,.1)", tension: .3, fill: true }
                 ]
             },
             options: {
@@ -828,10 +833,10 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
         if (slaTrendChart) slaTrendChart.destroy();
         slaTrendChart = new Chart(document.getElementById("slaTrendChart"), {
-            type: "line",
+            type: "bar",
             data: {
                 labels: keys,
-                datasets: [{ label: "SLA Compliance (%)", data, borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,.1)", tension: .3, spanGaps: true }]
+                datasets: [{ label: "SLA Compliance (%)", data, backgroundColor: "#22c55e", borderRadius: 4 }]
             },
             options: {
                 responsive: true,
@@ -843,12 +848,14 @@ $role = strtoupper($_SESSION['role'] ?? '');
     }
 
     // ============================================================
-    // TABLE: Top 5 Customer
+    // TABLE: Top 5 District
+    // Catatan: field `t.district` diharapkan dikirim dari API. Jika
+    // belum tersedia, seluruh task akan jatuh ke "Tidak diketahui".
     // ============================================================
-    function renderTopCustomers() {
+    function renderTopDistricts() {
         const counts = {};
         filteredTasks.forEach(t => {
-            const c = (t.customer || "Tidak diketahui").toString();
+            const c = (t.district || t.kecamatan || "Tidak diketahui").toString();
             counts[c] = (counts[c] || 0) + 1;
         });
 
@@ -1016,7 +1023,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
     document.getElementById("detailSearch").addEventListener("input", applyFilters);
 
     document.getElementById("trendGrouping").addEventListener("change", () => {
-        renderTrendChart();
+        renderOnAirTrendChart();
         renderSlaTrendChart();
     });
 
