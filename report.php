@@ -458,12 +458,17 @@ $role = strtoupper($_SESSION['role'] ?? '');
     });
 
     // ============================================================
-    // Sumber data: pakai endpoint proxy yang sudah ada (api/inbox.php),
-    // role diambil otomatis dari session PHP di server (bukan dari client).
-    // Semua agregasi report (summary card, chart, top customer, dsb)
-    // dihitung di sisi client dari task mentah ini.
+    // Sumber data: Apps Script INBOX (inbox_code.gs), sama seperti
+    // yang dipakai inbox.php. Field yang tersedia dari sumber ini:
+    // id, tipe, customer, area, prioritas, sisa_waktu, sla, status,
+    // dibuat, catatan. TIDAK ADA field responsibility/oa_date/district/
+    // sow/milestone - jadi widget "Task by Responsibility", "On Air
+    // Trend", dan "Task by District" tidak akan punya data nyata
+    // (fallback ke "Tidak diketahui"/kosong) selama pakai sumber ini.
     // ============================================================
-    const API_URL = "api/inbox.php";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbycDX6ccCngy2vvmWRMKXWCtrlDtwRyYZtDBVZsGb9rAAypaw8_B3MZWRmZiqDiRX8LOA/exec";
+    const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
+    const API_URL = GAS_URL + "?role=" + encodeURIComponent(USER_ROLE);
 
     let allTasksRaw = [];   // semua task hasil fetch dari server
     let filteredTasks = []; // hasil setelah filter (periode, area, sla, prioritas, search, quick filter)
@@ -624,8 +629,9 @@ $role = strtoupper($_SESSION['role'] ?? '');
     // ============================================================
     function renderSummaryCards() {
         const total = filteredTasks.length;
-        let open = 0, progress = 0, closed = 0, onTrack = 0, slaKnown = 0;
+        let open = 0, progress = 0, closed = 0;
         let sisaSum = 0, sisaCount = 0;
+        let onTrack = 0, slaKnown = 0;
 
         filteredTasks.forEach(t => {
             const st = normalizeStatus(t.status);
@@ -657,15 +663,13 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ============================================================
     // CHART: Task by Responsibility (doughnut)
-    // Catatan: field `t.responsibility` diharapkan dikirim dari API
-    // (mis. MSO / MBB / SS / ED, mengikuti kategori role di GAS).
-    // Jika field belum tersedia di response api/inbox.php, seluruh
-    // task akan jatuh ke kategori "Tidak diketahui".
+    // CATATAN: field `responsibility` TIDAK dikirim oleh sumber data
+    // inbox saat ini, sehingga semua task akan jatuh ke "Tidak diketahui".
     // ============================================================
     function renderResponsibilityDoughnut() {
         const counts = {};
         filteredTasks.forEach(t => {
-            const resp = (t.responsibility || t.tanggung_jawab || "Tidak diketahui").toString().trim() || "Tidak diketahui";
+            const resp = (t.responsibility || "Tidak diketahui").toString().trim() || "Tidak diketahui";
             counts[resp] = (counts[resp] || 0) + 1;
         });
 
@@ -704,10 +708,10 @@ $role = strtoupper($_SESSION['role'] ?? '');
     }
 
     // ============================================================
-    // CHART: On Air Trend (jumlah site/task On Air per hari/minggu/bulan)
-    // Catatan: field `t.oa_date` (tanggal New Site On Air) diharapkan
-    // dikirim dari API, mengikuti sumber kolom AU/T pada backup.gs.
-    // Task tanpa tanggal OA tidak ikut dihitung pada chart ini.
+    // CHART: On Air Trend
+    // CATATAN: field `oa_date` dan `responsibility` (utk filter AZ=OA)
+    // TIDAK dikirim oleh sumber data inbox saat ini, sehingga chart
+    // ini akan selalu kosong sampai field tsb ditambahkan ke inbox_code.gs.
     // ============================================================
     function groupKeyForDate(d, grouping) {
         if (!d) return "Tidak diketahui";
@@ -727,9 +731,12 @@ $role = strtoupper($_SESSION['role'] ?? '');
         const buckets = {}; // key -> {onAir, _sortDate}
 
         filteredTasks.forEach(t => {
-            const oaRaw = t.oa_date || t.tanggal_oa || t.on_air_date || "";
-            const d = parseTaskDate(oaRaw);
-            if (!d) return; // hanya task yang sudah punya tanggal On Air yang dihitung
+            // Column AZ = OA: hanya task yang responsibility-nya persis "OA"
+            const resp = (t.responsibility || "").toString().trim().toUpperCase();
+            if (resp !== "OA") return;
+
+            const d = parseTaskDate(t.oa_date);
+            if (!d) return;
             const key = groupKeyForDate(d, grouping);
             if (!buckets[key]) buckets[key] = { onAir: 0, _sortDate: d.getTime() };
             buckets[key].onAir++;
@@ -757,15 +764,16 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ============================================================
     // CHART: Task by Priority (horizontal bar)
+    // Sumber: t.prioritas (dikirim langsung oleh inbox_code.gs)
     // ============================================================
     function renderPriorityChart() {
         const counts = {};
         filteredTasks.forEach(t => {
-            const p = (t.prioritas || "Tidak diketahui").toString();
+            const p = (t.prioritas || "Tidak diketahui").toString().trim() || "Tidak diketahui";
             counts[p] = (counts[p] || 0) + 1;
         });
 
-        const labels = Object.keys(counts);
+        const labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 10);
         const data = labels.map(l => counts[l]);
         const colorMap = { Tinggi: "#ef4444", High: "#ef4444", Medium: "#f59e0b", Normal: "#22c55e", Low: "#22c55e" };
         const colors = labels.map(l => colorMap[l] || "#3b82f6");
@@ -849,13 +857,13 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     // ============================================================
     // TABLE: Top 5 District
-    // Catatan: field `t.district` diharapkan dikirim dari API. Jika
-    // belum tersedia, seluruh task akan jatuh ke "Tidak diketahui".
+    // CATATAN: field `district` TIDAK dikirim oleh sumber data f
+    // saat ini, sehingga seluruh task akan jatuh ke "Tidak diketahui".
     // ============================================================
     function renderTopDistricts() {
         const counts = {};
         filteredTasks.forEach(t => {
-            const c = (t.district || t.kecamatan || "Tidak diketahui").toString();
+            const c = (t.district || "Tidak diketahui").toString().trim() || "Tidak diketahui";
             counts[c] = (counts[c] || 0) + 1;
         });
 

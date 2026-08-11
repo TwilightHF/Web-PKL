@@ -500,7 +500,7 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "api/inbox.php";
+    const API_URL = "https://script.google.com/macros/s/AKfycbycDX6ccCngy2vvmWRMKXWCtrlDtwRyYZtDBVZsGb9rAAypaw8_B3MZWRmZiqDiRX8LOA/exec";
 
     // Role user (dari session PHP) dikirim ke Apps Script sebagai
     // query param, dipakai untuk filter kategori + wilayah data
