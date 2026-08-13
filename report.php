@@ -112,7 +112,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-lg-2 col-md-4 col-6">
+                    <div class="col-lg col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-primary"><i class="bi bi-clipboard-data"></i></div>
@@ -124,7 +124,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-4 col-6">
+                    <div class="col-lg col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-danger"><i class="bi bi-inbox"></i></div>
@@ -136,19 +136,19 @@ $role = strtoupper($_SESSION['role'] ?? '');
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-4 col-6">
+                    <div class="col-lg col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
                             <div class="card-body d-flex gap-2 align-items-start">
-                                <div class="icon-box bg-soft-info"><i class="bi bi-arrow-repeat"></i></div>
+                                <div class="icon-box bg-soft-warning"><i class="bi bi-exclamation-triangle"></i></div>
                                 <div>
-                                    <h6>On Progress</h6>
-                                    <h3 id="sumProgress">0</h3>
-                                    <div class="trend text-info" id="sumProgressTrend">&nbsp;</div>
+                                    <h6>Issue</h6>
+                                    <h3 id="sumIssue">0</h3>
+                                    <div class="trend text-warning" id="sumIssueTrend">&nbsp;</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-4 col-6">
+                    <div class="col-lg col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-success"><i class="bi bi-check-circle"></i></div>
@@ -160,7 +160,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-4 col-6">
+                    <div class="col-lg col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-purple"><i class="bi bi-shield-check"></i></div>
@@ -172,7 +172,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-4 col-6">
+                    <div class="col-lg col-md-4 col-6">
                         <div class="card shadow-sm h-100 report-summary-card">
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-warning"><i class="bi bi-clock-history"></i></div>
@@ -558,14 +558,16 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
     function renderSummaryCards() {
         const total = filteredTasks.length;
-        let open = 0, progress = 0, closed = 0;
+        let open = 0, issue = 0, closed = 0;
         let ttdSum = 0, ttdCount = 0, onTrack = 0;
 
         filteredTasks.forEach(t => {
-            const st = normalizeStatus(t.status);
-            if (st === "Open" || st === "Issue" || st === "Waiting") open++;
-            if (st === "On Progress") progress++;
-            if (st === "Closed") closed++;
+            const s = (t.status || "").toString();
+            // Sama persis dengan logika Dashboard: status kosong = Open
+            if (s === "" || s.toLowerCase().indexOf("open") !== -1) open++;
+            else if (s.indexOf("Issue") !== -1) issue++;
+            else if (s.indexOf("Closed") !== -1) closed++;
+            else open++; // fallback status tak dikenal -> Open
 
             const ttd = parseFloat(t.ttd);
             if (!isNaN(ttd)) {
@@ -576,7 +578,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
 
         document.getElementById("sumTotal").textContent = total;
         document.getElementById("sumOpen").textContent = open;
-        document.getElementById("sumProgress").textContent = progress;
+        document.getElementById("sumIssue").textContent = issue;
         document.getElementById("sumClosed").textContent = closed;
 
         const compliance = ttdCount > 0 ? Math.round((onTrack / ttdCount) * 1000) / 10 : 0;
@@ -653,7 +655,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
         const grouping = document.getElementById("trendGrouping").value;
         const dateFrom = document.getElementById("dateFrom").value ? new Date(document.getElementById("dateFrom").value) : null;
         const dateTo = document.getElementById("dateTo").value ? new Date(document.getElementById("dateTo").value) : null;
-        const buckets = {}; // key -> {onAir, _sortDate}
+        const buckets = {}; // key -> {open, progress, closed, _sortDate}
 
         allOnAirRaw.forEach(t => {
             const d = parseTaskDate(t.oa_date);
@@ -662,8 +664,12 @@ $role = strtoupper($_SESSION['role'] ?? '');
             if (dateTo && d > new Date(dateTo.getTime() + 86399999)) return;
 
             const key = groupKeyForDate(d, grouping);
-            if (!buckets[key]) buckets[key] = { onAir: 0, _sortDate: d.getTime() };
-            buckets[key].onAir++;
+            if (!buckets[key]) buckets[key] = { open: 0, issue: 0, closed: 0, _sortDate: d.getTime() };
+
+            const st = normalizeStatus(t.status);
+            if (st === "Closed") buckets[key].closed++;
+            else if (st === "Issue") buckets[key].issue++;
+            else buckets[key].open++; // Open, On Progress & Waiting dihitung sebagai "Open"
         });
 
         const keys = Object.keys(buckets).sort((a, b) => buckets[a]._sortDate - buckets[b]._sortDate);
@@ -674,7 +680,9 @@ $role = strtoupper($_SESSION['role'] ?? '');
             data: {
                 labels: keys,
                 datasets: [
-                    { label: "On Air", data: keys.map(k => buckets[k].onAir), borderColor: "#22c55e", backgroundColor: "rgba(34,197,94,.1)", tension: .3, fill: true }
+                    { label: "Open", data: keys.map(k => buckets[k].open), borderColor: "#ef4444", backgroundColor: "#ef4444", tension: .4, borderWidth: 2, pointRadius: 3, fill: false },
+                    { label: "Issue", data: keys.map(k => buckets[k].issue), borderColor: "#eab308", backgroundColor: "#eab308", tension: .4, borderWidth: 2, pointRadius: 3, fill: false },
+                    { label: "Closed", data: keys.map(k => buckets[k].closed), borderColor: "#22c55e", backgroundColor: "#22c55e", tension: .4, borderWidth: 2, pointRadius: 3, fill: false }
                 ]
             },
             options: {
