@@ -52,6 +52,7 @@ if (isset($_POST['login'])) {
         if (!empty($result['success'])) {
             $_SESSION['username'] = $result['username'];
             $_SESSION['nama']     = $result['nama'];
+            $_SESSION['email']    = $result['email'] ?? '';
             // role disimpan uppercase & trimmed supaya konsisten
             // saat dicocokkan dengan kategori/wilayah di Apps Script
             $_SESSION['role']     = strtoupper(trim($result['role'] ?? 'USER'));

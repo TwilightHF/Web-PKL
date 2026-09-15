@@ -162,14 +162,13 @@ $avatarSrc = !empty($_SESSION['avatar'])
                     <div class="col-lg-3">
                         <div class="card shadow-sm">
                             <div class="card-body p-2">
-                                <div class="settings-nav-pill active d-flex align-items-center gap-2 mb-1">
+                                <div class="settings-nav-pill active d-flex align-items-center gap-2 mb-1" data-tab="tabProfil">
                                     <i class="bi bi-person-circle"></i> Profil
                                 </div>
-                                <div class="settings-nav-pill d-flex align-items-center gap-2 mb-1 text-muted">
+                                <div class="settings-nav-pill d-flex align-items-center gap-2 mb-1" data-tab="tabKeamanan">
                                     <i class="bi bi-shield-lock"></i> Keamanan
-                                    <span class="badge bg-secondary-subtle text-secondary ms-auto coming-soon-badge">Segera hadir</span>
                                 </div>
-                                <div class="settings-nav-pill d-flex align-items-center gap-2 text-muted">
+                                <div class="settings-nav-pill d-flex align-items-center gap-2 text-muted" style="cursor:not-allowed;">
                                     <i class="bi bi-bell"></i> Notifikasi
                                     <span class="badge bg-secondary-subtle text-secondary ms-auto coming-soon-badge">Segera hadir</span>
                                 </div>
@@ -177,8 +176,8 @@ $avatarSrc = !empty($_SESSION['avatar'])
                         </div>
                     </div>
 
-                    <!-- Form profil -->
-                    <div class="col-lg-9">
+                    <!-- Tab: Profil -->
+                    <div class="col-lg-9" id="tabProfil">
                         <form method="POST" enctype="multipart/form-data">
                             <div class="card shadow-sm mb-4">
                                 <div class="card-header fw-bold">
@@ -233,6 +232,78 @@ $avatarSrc = !empty($_SESSION['avatar'])
                             </div>
                         </form>
                     </div>
+
+                    <!-- Tab: Keamanan -->
+                    <div class="col-lg-9" id="tabKeamanan" style="display:none;">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header fw-bold">
+                                <i class="bi bi-shield-lock me-1"></i> Data Akun
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Email</label>
+                                        <input type="text" class="form-control field-readonly"
+                                               value="<?= htmlspecialchars($_SESSION['email'] ?? '-') ?>" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Username</label>
+                                        <input type="text" class="form-control field-readonly"
+                                               value="<?= htmlspecialchars($_SESSION['username'] ?? '') ?>" disabled>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-2">Email &amp; username hanya bisa diubah oleh admin.</small>
+                            </div>
+                        </div>
+
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header fw-bold">
+                                <i class="bi bi-key me-1"></i> Ganti Password
+                            </div>
+                            <div class="card-body">
+                                <div id="pwdAlert" class="alert d-none" role="alert"></div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Password Lama</label>
+                                        <div class="input-group">
+                                            <input type="password" id="oldPassword" class="form-control" autocomplete="current-password">
+                                            <button type="button" class="btn btn-outline-secondary toggle-pwd" data-target="oldPassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6"></div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Password Baru</label>
+                                        <div class="input-group">
+                                            <input type="password" id="newPassword" class="form-control" autocomplete="new-password">
+                                            <button type="button" class="btn btn-outline-secondary toggle-pwd" data-target="newPassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Minimal 6 karakter.</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Konfirmasi Password Baru</label>
+                                        <div class="input-group">
+                                            <input type="password" id="confirmPassword" class="form-control" autocomplete="new-password">
+                                            <button type="button" class="btn btn-outline-secondary toggle-pwd" data-target="confirmPassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" id="btnBatalPwd">Batal</button>
+                            <button type="button" class="btn btn-primary" id="btnSimpanPwd">
+                                <i class="bi bi-check2-circle me-1"></i> Simpan Password
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -256,6 +327,91 @@ $avatarSrc = !empty($_SESSION['avatar'])
             document.getElementById('avatarPreview').src = ev.target.result;
         };
         reader.readAsDataURL(file);
+    });
+
+    // ---- Tab switching (Profil / Keamanan) ----
+    document.querySelectorAll('.settings-nav-pill[data-tab]').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('.settings-nav-pill[data-tab]').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+
+            document.querySelectorAll('#tabProfil, #tabKeamanan').forEach(el => el.style.display = 'none');
+            document.getElementById(pill.dataset.tab).style.display = '';
+        });
+    });
+
+    // ---- Toggle tampil/sembunyi password ----
+    document.querySelectorAll('.toggle-pwd').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = document.getElementById(btn.dataset.target);
+            const icon = btn.querySelector('i');
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            icon.className = showing ? 'bi bi-eye' : 'bi bi-eye-slash';
+        });
+    });
+
+    function showPwdAlert(message, isError) {
+        const box = document.getElementById('pwdAlert');
+        box.className = 'alert ' + (isError ? 'alert-danger' : 'alert-success');
+        box.textContent = message;
+    }
+
+    // ---- Submit ganti password ----
+    document.getElementById('btnSimpanPwd').addEventListener('click', async () => {
+        const oldPassword = document.getElementById('oldPassword').value.trim();
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            showPwdAlert('Semua kolom password wajib diisi.', true);
+            return;
+        }
+        if (newPassword.length < 6) {
+            showPwdAlert('Password baru minimal 6 karakter.', true);
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showPwdAlert('Konfirmasi password baru tidak cocok.', true);
+            return;
+        }
+
+        const btn = document.getElementById('btnSimpanPwd');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
+
+        try {
+            const res = await fetch('api/change_password.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+            });
+
+            const result = await res.json();
+
+            if (result.success) {
+                showPwdAlert('Password berhasil diubah.', false);
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                showPwdAlert(result.error || 'Gagal mengubah password.', true);
+            }
+        } catch (err) {
+            console.error('Gagal mengubah password:', err);
+            showPwdAlert('Tidak dapat menghubungi server. Coba lagi.', true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+
+    document.getElementById('btnBatalPwd').addEventListener('click', () => {
+        document.getElementById('oldPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('pwdAlert').className = 'alert d-none';
     });
 
     // Load Sidebar (pola sama seperti index.php & report.php)
