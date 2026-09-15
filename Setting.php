@@ -36,6 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
 
                 if (move_uploaded_file($_FILES['avatar']['tmp_name'], $avatarDir . $filename)) {
                     $_SESSION['avatar'] = 'uploads/avatars/' . $filename;
+
+                    // Simpan juga ke file pemetaan permanen (username -> path foto)
+                    // supaya foto tidak hilang saat session baru terbentuk (logout/relog).
+                    $avatarMapFile = $avatarDir . 'avatar_map.json';
+                    $avatarMap = file_exists($avatarMapFile)
+                        ? (json_decode(file_get_contents($avatarMapFile), true) ?: [])
+                        : [];
+                    $avatarMap[$_SESSION['username']] = $_SESSION['avatar'];
+                    file_put_contents($avatarMapFile, json_encode($avatarMap), LOCK_EX);
                 } else {
                     $errorMsg = "Gagal mengunggah foto. Coba lagi.";
                 }
