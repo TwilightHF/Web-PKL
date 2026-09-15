@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $url = "https://script.google.com/macros/s/AKfycbzB026p6CF6Eitn3HGrsRGh9sEa3ph8jv0yq6Ei8eiPS1oBT96ZcDMPzAQbV_nH8fm-FA/exec";
+    $url = "https://script.google.com/macros/s/AKfycbxR4QR_LIOqPXtGY6AtV7oEixhrUyjN9no4CzeQyo2lu2TngVHcwRMDVTSr8l61UZIEzw/exec";
 
     $postData = http_build_query([
         "username" => $username,
@@ -78,6 +78,7 @@ if (isset($_POST['login'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NETOPS Login</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -119,10 +120,6 @@ if (isset($_POST['login'])) {
                     LOGIN
                 </button>
             </form>
-
-            <div class="text-center mt-3">
-                <small class="text-light">Default: admin / admin123</small>
-            </div>
         </div>
     </div>
 </div>

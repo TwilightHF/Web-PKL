@@ -1,6 +1,9 @@
 <?php
 require_once 'auth.php';
 $role = strtoupper($_SESSION['role'] ?? '');
+$avatarSrc = !empty($_SESSION['avatar'])
+    ? htmlspecialchars($_SESSION['avatar'])
+    : "https://i.pravatar.cc/40?u=" . urlencode($_SESSION['username'] ?? 'user');
 ?>
 
 <!doctype html>
@@ -9,6 +12,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
     <title>Report - NETOPS</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="assets/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
@@ -54,7 +58,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                 <span class="navbar-brand fw-bold fs-4">Report</span>
                 <div class="ms-auto d-flex align-items-center gap-3">
                     <i class="bi bi-bell fs-5"></i>
-                    <img src="https://i.pravatar.cc/40" class="rounded-circle" width="38" height="38">
+                    <img src="<?= $avatarSrc ?>" class="rounded-circle" width="38" height="38" style="object-fit:cover;">
                     <div>
                         <div class="fw-semibold small"><?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></div>
                         <small class="text-muted"><?= htmlspecialchars($_SESSION['role'] ?? '') ?></small>
@@ -153,7 +157,7 @@ $role = strtoupper($_SESSION['role'] ?? '');
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-success"><i class="bi bi-check-circle"></i></div>
                                 <div>
-                                    <h6>Closed Task</h6>
+                                    <h6>Confirmation</h6>
                                     <h3 id="sumClosed">0</h3>
                                     <div class="trend text-success" id="sumClosedTrend">&nbsp;</div>
                                 </div>

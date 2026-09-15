@@ -3,7 +3,7 @@ require_once 'auth.php';
 $role = strtoupper($_SESSION['role'] ?? '');
 
 // Hanya role dengan kategori MSO (misal "MSOAREA2") yang boleh
-// mengupdate status/catatan/lampiran task di halaman ini.
+// mengupdate status/catatan task di halaman ini.
 $canUpdate = (strpos($role, 'MSO') === 0);
 ?>
 
@@ -15,6 +15,7 @@ $canUpdate = (strpos($role, 'MSO') === 0);
         <!-- Required meta tags -->
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/png" href="assets/favicon.png">
 
         <!-- Bootstrap CSS v5.3.8 -->
         <link
@@ -423,21 +424,6 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
                             </div>
 
-                            <div class="mb-4">
-
-                                <label class="form-label">
-                                    Upload Lampiran
-                                </label>
-
-                                <input
-                                    type="file"
-                                    id="updateLampiran"
-                                    class="form-control">
-
-                                <small class="text-muted">Opsional. Maks. sekitar 5-10MB (batasan Apps Script/Drive).</small>
-
-                            </div>
-
                             <div class="text-end">
 
                                 <button type="button" id="btnBatal" class="btn btn-secondary me-2">
@@ -500,13 +486,13 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
     // PENTING: idealnya URL ini disimpan di backend (mis. endpoint proxy PHP),
     // bukan langsung di sisi client, supaya tidak terekspos ke publik.
-    const API_URL = "https://script.google.com/macros/s/AKfycbycDX6ccCngy2vvmWRMKXWCtrlDtwRyYZtDBVZsGb9rAAypaw8_B3MZWRmZiqDiRX8LOA/exec";
+    const API_URL = "api/inbox.php";
 
     // Role user (dari session PHP) dikirim ke Apps Script sebagai
     // query param, dipakai untuk filter kategori + wilayah data
     const USER_ROLE = "<?= htmlspecialchars($role, ENT_QUOTES) ?>";
 
-    // Hanya role dengan kategori MSO yang boleh update status/catatan/lampiran.
+    // Hanya role dengan kategori MSO yang boleh update status/catatan.
     // Dihitung juga di PHP ($canUpdate) untuk disable elemen form saat render,
     // dan di sini untuk jaga-jaga sisi JS (double-check sebelum kirim request).
     const CAN_UPDATE = <?= $canUpdate ? 'true' : 'false' ?>;
@@ -843,9 +829,6 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
         document.getElementById("updateStatus").value = task.status ?? "Open";
         document.getElementById("updateCatatan").value = task.catatan ?? "";
-
-        const lampiran = document.getElementById("updateLampiran");
-        if (lampiran) lampiran.value = "";
     }
 
     function getPageNumbers(current, total, siblingCount = 1) {
@@ -941,15 +924,6 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
     }
 
-    function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(",")[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    }
-
     async function saveTaskUpdate() {
 
         const id = document.getElementById("selectedTaskId").value;
@@ -976,23 +950,6 @@ $canUpdate = (strpos($role, 'MSO') === 0);
                 catatan: newCatatan,
                 role: USER_ROLE // dikirim supaya Apps Script bisa validasi ulang di server
             };
-
-            const fileInput = document.getElementById("updateLampiran");
-            const file = fileInput && fileInput.files[0];
-
-            if (file) {
-                const MAX_SIZE = 8 * 1024 * 1024;
-                if (file.size > MAX_SIZE) {
-                    throw new Error("Ukuran file lampiran terlalu besar (maks. 8MB).");
-                }
-
-                const base64Data = await fileToBase64(file);
-                payload.lampiran = {
-                    data: base64Data,
-                    mimeType: file.type,
-                    fileName: file.name
-                };
-            }
 
             const res = await fetch(API_URL, {
                 method: "POST",
@@ -1071,8 +1028,6 @@ $canUpdate = (strpos($role, 'MSO') === 0);
         document.getElementById("selectedTaskId").value = "";
         document.getElementById("updateStatus").value = "Open";
         document.getElementById("updateCatatan").value = "";
-        const lampiran = document.getElementById("updateLampiran");
-        if (lampiran) lampiran.value = "";
     }
 
     // ---- Event Listeners ----
