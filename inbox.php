@@ -102,7 +102,19 @@ $canUpdate = (strpos($role, 'MSO') === 0);
                     </small>
                 </div>
 
-                <div>
+                <div class="d-flex gap-2">
+                   <button
+                        type="button"
+                        id="btnBuatTask"
+                        class="btn btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalBuatTask">
+
+                        <i class="bi bi-plus-lg"></i>
+                        Buat Task Baru
+
+                    </button>
+
                    <button
                         type="button"
                         id="btnRefresh"
@@ -482,6 +494,76 @@ $canUpdate = (strpos($role, 'MSO') === 0);
     <!-- Bootstrap JS Bundle (dibutuhkan untuk Toast) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="notifications.js"></script>
+
+    <!-- Modal Buat Task Baru -->
+    <div class="modal fade" id="modalBuatTask" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Buat Task Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formBuatTask">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Site ID <span class="text-danger">*</span></label>
+                                <input type="text" id="newSiteId" class="form-control" placeholder="Misal: JKT-0012" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Program <span class="text-danger">*</span></label>
+                                <input type="text" id="newProgram" class="form-control" placeholder="Misal: MBB Expansion" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Customer / Site Name</label>
+                                <input type="text" id="newSiteName" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Area / Region</label>
+                                <input type="text" id="newRegion" class="form-control" placeholder="Misal: JABAR">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    Kategori (kolom AZ)
+                                    <i class="bi bi-info-circle text-muted" title="Menentukan role mana yang dapat notifikasi & melihat task ini"></i>
+                                </label>
+                                <input type="text" id="newResponsibility" class="form-control" list="respSuggestions" placeholder="Pilih atau ketik manual">
+                                <datalist id="respSuggestions">
+                                    <option value="SO">SO (notif ke role MSO)</option>
+                                    <option value="MBB/SO">MBB/SO (notif ke role MBB)</option>
+                                    <option value="DWS">DWS (notif ke role SS)</option>
+                                    <option value="TA/ED">TA/ED (notif ke role ED)</option>
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Status</label>
+                                <select id="newStatus" class="form-select">
+                                    <option value="">Open (kosong)</option>
+                                    <option value="Issue">Issue</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">TTD (jumlah hari)</label>
+                                <input type="number" id="newTtdDays" class="form-control" value="0" min="0">
+                                <small class="text-muted">&gt; 20 hari akan masuk Priority Order di Dashboard.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanggal On Air (opsional)</label>
+                                <input type="date" id="newOaDate" class="form-control">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" id="btnSimpanTaskBaru">
+                        <i class="bi bi-check2-circle me-1"></i> Simpan Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
 
@@ -1056,6 +1138,57 @@ $canUpdate = (strpos($role, 'MSO') === 0);
     document.getElementById("btnSimpan").addEventListener("click", saveTaskUpdate);
 
     document.getElementById("btnBatal").addEventListener("click", resetDetailForm);
+
+    // ---- Buat Task Baru ----
+    document.getElementById("btnSimpanTaskBaru").addEventListener("click", async () => {
+        const siteId  = document.getElementById("newSiteId").value.trim();
+        const program = document.getElementById("newProgram").value.trim();
+
+        if (!siteId || !program) {
+            showToast("Site ID dan Program wajib diisi.", true);
+            return;
+        }
+
+        const payload = {
+            site_id: siteId,
+            program: program,
+            site_name: document.getElementById("newSiteName").value.trim(),
+            region: document.getElementById("newRegion").value.trim(),
+            responsibility: document.getElementById("newResponsibility").value.trim(),
+            status: document.getElementById("newStatus").value,
+            ttd_days: document.getElementById("newTtdDays").value || "0",
+            oa_date: document.getElementById("newOaDate").value
+        };
+
+        const btn = document.getElementById("btnSimpanTaskBaru");
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
+
+        try {
+            const res = await fetch("api/create_task.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                showToast("Task baru berhasil dibuat. Notifikasi akan muncul setelah trigger GAS jalan (maks. ~5 menit).");
+                document.getElementById("formBuatTask").reset();
+                bootstrap.Modal.getInstance(document.getElementById("modalBuatTask")).hide();
+                fetchTasksFromServer({ useCache: false, silent: false });
+            } else {
+                showToast(result.error || "Gagal membuat task baru.", true);
+            }
+        } catch (err) {
+            console.error("Gagal membuat task baru:", err);
+            showToast("Tidak dapat menghubungi server. Coba lagi.", true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
 
     document.getElementById("filterForm").addEventListener("submit", function (e) {
         e.preventDefault();
