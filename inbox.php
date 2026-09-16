@@ -48,16 +48,28 @@ $canUpdate = (strpos($role, 'MSO') === 0);
                 <div class="ms-auto d-flex align-items-center gap-3">
 
                     <!-- Notification -->
-                    <i class="bi bi-bell fs-5 text-muted" style="cursor: pointer;"></i>
+                    <div class="dropdown">
+                        <button class="btn btn-link p-0 border-0 position-relative" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell fs-5 text-dark"></i>
+                            <span id="notifBadge" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle d-none" style="font-size:.6rem;">0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-0 shadow-sm" style="width:320px; max-height:380px; overflow-y:auto;">
+                            <div class="p-3 border-bottom fw-bold small">Notifikasi</div>
+                            <div id="notifList" class="list-group list-group-flush">
+                                <div class="text-center text-muted small p-4">Memuat...</div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Profile -->
                     <div class="d-flex align-items-center gap-2">
                         <img
-                            src="https://i.pravatar.cc/40"
+                            src="<?= !empty($_SESSION['avatar']) ? htmlspecialchars($_SESSION['avatar']) : 'https://i.pravatar.cc/40?u=' . urlencode($_SESSION['username'] ?? 'user') ?>"
                             alt="Profile"
                             class="rounded-circle"
                             width="38"
-                            height="38">
+                            height="38"
+                            style="object-fit:cover;">
 
                         <div>
                             <div class="fw-semibold"><?= htmlspecialchars($_SESSION['nama']) ?></div>
@@ -469,6 +481,7 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
     <!-- Bootstrap JS Bundle (dibutuhkan untuk Toast) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="notifications.js"></script>
 
     <script>
 

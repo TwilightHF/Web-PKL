@@ -57,7 +57,18 @@ $avatarSrc = !empty($_SESSION['avatar'])
             <nav class="navbar bg-white shadow-sm px-4 py-3">
                 <span class="navbar-brand fw-bold fs-4">Report</span>
                 <div class="ms-auto d-flex align-items-center gap-3">
-                    <i class="bi bi-bell fs-5"></i>
+                    <div class="dropdown">
+                        <button class="btn btn-link p-0 border-0 position-relative" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell fs-5 text-dark"></i>
+                            <span id="notifBadge" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle d-none" style="font-size:.6rem;">0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-0 shadow-sm" style="width:320px; max-height:380px; overflow-y:auto;">
+                            <div class="p-3 border-bottom fw-bold small">Notifikasi</div>
+                            <div id="notifList" class="list-group list-group-flush">
+                                <div class="text-center text-muted small p-4">Memuat...</div>
+                            </div>
+                        </div>
+                    </div>
                     <img src="<?= $avatarSrc ?>" class="rounded-circle" width="38" height="38" style="object-fit:cover;">
                     <div>
                         <div class="fw-semibold small"><?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></div>
@@ -387,6 +398,7 @@ $avatarSrc = !empty($_SESSION['avatar'])
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="notifications.js"></script>
 
     <script>
     fetch('sidebar.html').then(res => res.text()).then(html => {
