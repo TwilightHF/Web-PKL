@@ -16,7 +16,7 @@ if (isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    $url = "https://script.google.com/macros/s/AKfycbxR4QR_LIOqPXtGY6AtV7oEixhrUyjN9no4CzeQyo2lu2TngVHcwRMDVTSr8l61UZIEzw/exec";
+    $url = "https://script.google.com/macros/s/AKfycbw8rgzuIDBB9ZV1XOxPJDLboRZkGwjRWGeTKEOvMwgJiy6-KjUDf3vgj6RGr2rR2-TkyA/exec";
 
     $postData = http_build_query([
         "username" => $username,

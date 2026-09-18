@@ -46,7 +46,7 @@ if ($oldPassword === $newPassword) {
 
 // URL Apps Script yang SAMA dengan yang dipakai login.php - karena
 // doChangePassword() ditambahkan pada deployment (backup.gs) yang sama.
-$url = "https://script.google.com/macros/s/AKfycbzUNR7QPIm2g_QnuuYcZjzp8lT8_NFtDyhtGo73u7XbfcbB_euv0hI2saoDWxzU0vEB4g/exec";
+$url = "https://script.google.com/macros/s/AKfycbw8rgzuIDBB9ZV1XOxPJDLboRZkGwjRWGeTKEOvMwgJiy6-KjUDf3vgj6RGr2rR2-TkyA/exec";
 
 $postData = http_build_query([
     "action"       => "change_password",

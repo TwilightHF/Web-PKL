@@ -507,6 +507,19 @@ $canUpdate = (strpos($role, 'MSO') === 0);
                     <form id="formBuatTask">
                         <div class="row g-3">
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    Sheet Tujuan <span class="text-danger">*</span>
+                                    <i class="bi bi-info-circle text-muted" title="'All Order' hanya tampilan gabungan dan tidak bisa ditulis langsung - task baru harus masuk ke salah satu sheet sumber ini"></i>
+                                </label>
+                                <select id="newTargetSheet" class="form-select" required>
+                                    <option value="" disabled selected>Pilih sheet tujuan...</option>
+                                    <option value="NL">NL</option>
+                                    <option value="RBL">RBL</option>
+                                    <option value="NY NIM">NY NIM</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6"></div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Site ID <span class="text-danger">*</span></label>
                                 <input type="text" id="newSiteId" class="form-control" placeholder="Misal: JKT-0012" required>
                             </div>
@@ -1141,8 +1154,14 @@ $canUpdate = (strpos($role, 'MSO') === 0);
 
     // ---- Buat Task Baru ----
     document.getElementById("btnSimpanTaskBaru").addEventListener("click", async () => {
+        const targetSheet = document.getElementById("newTargetSheet").value;
         const siteId  = document.getElementById("newSiteId").value.trim();
         const program = document.getElementById("newProgram").value.trim();
+
+        if (!targetSheet) {
+            showToast("Pilih sheet tujuan terlebih dahulu.", true);
+            return;
+        }
 
         if (!siteId || !program) {
             showToast("Site ID dan Program wajib diisi.", true);
@@ -1150,6 +1169,7 @@ $canUpdate = (strpos($role, 'MSO') === 0);
         }
 
         const payload = {
+            target_sheet: targetSheet,
             site_id: siteId,
             program: program,
             site_name: document.getElementById("newSiteName").value.trim(),
@@ -1174,7 +1194,7 @@ $canUpdate = (strpos($role, 'MSO') === 0);
             const result = await res.json();
 
             if (result.success) {
-                showToast("Task baru berhasil dibuat. Notifikasi akan muncul setelah trigger GAS jalan (maks. ~5 menit).");
+                showToast("Task baru berhasil dibuat di sheet " + targetSheet + ". Notifikasi akan muncul setelah trigger GAS jalan (maks. ~5 menit).");
                 document.getElementById("formBuatTask").reset();
                 bootstrap.Modal.getInstance(document.getElementById("modalBuatTask")).hide();
                 fetchTasksFromServer({ useCache: false, silent: false });

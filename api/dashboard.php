@@ -23,7 +23,7 @@ if (!$role) {
 
 // URL Apps Script khusus DASHBOARD. Hanya ada di server, tidak pernah
 // dikirim ke browser.
-const GAS_URL_DASHBOARD = "https://script.google.com/macros/s/AKfycbxuXndEYpie-gQJXBet3-hbt0HvntCarFiwEGJ_03O980gUjl5LYiHil9h7Nx6Zf01wVA/exec";
+const GAS_URL_DASHBOARD = "https://script.google.com/macros/s/AKfycbxPuLWeJV1uWoYMUeUePLkvAd4k3ZxsRkljo8iw4AUVUV5cn-wd8yhlfg-pVPqyfGxf/exec";
 
 $url = GAS_URL_DASHBOARD . "?role=" . urlencode($role);
 

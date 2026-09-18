@@ -1,10 +1,15 @@
 <?php
 // api/create_task.php
-// Proxy antara browser (tombol "+ Buat Task Baru" di inbox.php) dan
-// Google Apps Script. Pakai deployment yang SAMA dengan dashboard.php
-// & notifications.php, karena doCreateTask() ditambahkan di script
-// (backup.gs) yang sama, dan menulis ke spreadsheet yang sama juga
-// yang dibaca Dashboard, Report, Inbox, dan sistem Notifikasi.
+// Proxy antara browser (inbox.php > modal "Buat Task Baru") dan Google
+// Apps Script (doCreateTask, action "create_task").
+//
+// PENTING: "All Order" HANYA sheet tampilan gabungan (di-protect, formula
+// menarik dari sheet sumber). Task baru HARUS ditulis ke salah satu sheet
+// sumber asli (NL / RBL / NY NIM) - dipilih user lewat dropdown "Sheet
+// Tujuan" di form, dikirim sebagai field target_sheet.
+//
+// Apps Script membaca field lewat e.parameter, yang HANYA terisi kalau
+// body request berupa application/x-www-form-urlencoded (bukan JSON).
 
 session_start();
 header('Content-Type: application/json');
@@ -24,33 +29,41 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $rawBody = file_get_contents('php://input');
 $payload = json_decode($rawBody, true);
 
-$siteId  = trim($payload['site_id'] ?? '');
-$program = trim($payload['program'] ?? '');
+$ALLOWED_SHEETS = ['NL', 'RBL', 'NY NIM'];
 
-if ($siteId === '' || $program === '') {
+if (!$payload || empty($payload['site_id']) || empty($payload['program'])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Site ID dan Program wajib diisi.']);
     exit;
 }
 
-// URL Apps Script yang SAMA dengan api/dashboard.php & api/notifications.php.
-const GAS_URL_DASHBOARD = "https://script.google.com/macros/s/AKfycbxuXndEYpie-gQJXBet3-hbt0HvntCarFiwEGJ_03O980gUjl5LYiHil9h7Nx6Zf01wVA/exec";
+if (empty($payload['target_sheet']) || !in_array($payload['target_sheet'], $ALLOWED_SHEETS, true)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Sheet tujuan wajib dipilih (NL, RBL, atau NY NIM).']);
+    exit;
+}
+
+// URL Apps Script yang SAMA dengan login.php & change_password.php
+// (script gabungan yang punya doLogin, doChangePassword, doCreateTask,
+// dan notifikasi sekaligus).
+$url = "https://script.google.com/macros/s/AKfycbw8rgzuIDBB9ZV1XOxPJDLboRZkGwjRWGeTKEOvMwgJiy6-KjUDf3vgj6RGr2rR2-TkyA/exec";
 
 $postData = http_build_query([
     "action"         => "create_task",
-    "site_id"        => $siteId,
-    "site_name"      => trim($payload['site_name'] ?? ''),
-    "nim_order"      => trim($payload['nim_order'] ?? ''),
-    "program"        => $program,
-    "program_chart"  => trim($payload['program_chart'] ?? ''),
-    "region"         => trim($payload['region'] ?? ''),
-    "responsibility" => trim($payload['responsibility'] ?? ''),
-    "status"         => trim($payload['status'] ?? ''),
-    "ttd_days"       => trim((string) ($payload['ttd_days'] ?? '0')),
-    "oa_date"        => trim($payload['oa_date'] ?? ''),
+    "target_sheet"   => $payload['target_sheet'],
+    "site_id"        => $payload['site_id'],
+    "program"        => $payload['program'],
+    "site_name"      => $payload['site_name'] ?? '',
+    "nim_order"      => $payload['nim_order'] ?? '',
+    "program_chart"  => $payload['program_chart'] ?? '',
+    "region"         => $payload['region'] ?? '',
+    "responsibility" => $payload['responsibility'] ?? '',
+    "status"         => $payload['status'] ?? '',
+    "ttd_days"       => $payload['ttd_days'] ?? '0',
+    "oa_date"        => $payload['oa_date'] ?? '',
 ]);
 
-$ch = curl_init(GAS_URL_DASHBOARD);
+$ch = curl_init($url);
 curl_setopt_array($ch, [
     CURLOPT_POST           => true,
     CURLOPT_POSTFIELDS     => $postData,
@@ -67,7 +80,7 @@ $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($response === false) {
-    error_log("Create task GAS request error: " . $curlError);
+    error_log("create_task GAS request error: " . $curlError);
     http_response_code(502);
     echo json_encode(['success' => false, 'error' => 'Tidak dapat menghubungi server. Coba lagi.']);
     exit;
@@ -76,7 +89,7 @@ if ($response === false) {
 $result = json_decode($response, true);
 
 if ($result === null) {
-    error_log("Create task GAS returned non-JSON (HTTP $httpCode): " . substr($response, 0, 500));
+    error_log("create_task GAS returned non-JSON (HTTP $httpCode): " . substr($response, 0, 500));
     http_response_code(502);
     echo json_encode(['success' => false, 'error' => 'Respon server tidak valid.']);
     exit;

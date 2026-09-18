@@ -1,34 +1,49 @@
 <?php
 // api/notifications.php
-// Proxy antara browser (bell icon di navbar semua halaman) dan Google
-// Apps Script. Role diambil dari session server, sama seperti proxy
-// lainnya (dashboard.php, inbox.php, report_data.php) - supaya user
-// hanya melihat notifikasi yang memang relevan untuk role-nya.
+// Proxy antara browser (notification.js) dan Google Apps Script,
+// mengambil notifikasi yang relevan untuk role user yang sedang login.
 
 session_start();
-
-$role = strtoupper($_SESSION['role'] ?? '');
-
 header('Content-Type: application/json');
 
-if (!$role) {
+if (!isset($_SESSION['username'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;
 }
 
-// URL Apps Script deployment yang SAMA dengan api/dashboard.php &
-// api/report_data.php (satu script backup.gs yang sama).
-const GAS_URL_DASHBOARD = "https://script.google.com/macros/s/AKfycbxuXndEYpie-gQJXBet3-hbt0HvntCarFiwEGJ_03O980gUjl5LYiHil9h7Nx6Zf01wVA/exec";
+$role = strtoupper($_SESSION['role'] ?? '');
 
-$url = GAS_URL_DASHBOARD . "?notifications=1&role=" . urlencode($role);
+// URL Apps Script yang SAMA dengan login.php / create_task.php
+// (script gabungan yang punya getNotifications()).
+$url = "https://script.google.com/macros/s/AKfycbw8rgzuIDBB9ZV1XOxPJDLboRZkGwjRWGeTKEOvMwgJiy6-KjUDf3vgj6RGr2rR2-TkyA/exec"
+     . "?notifications=1&role=" . urlencode($role);
 
-$response = @file_get_contents($url);
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_TIMEOUT        => 20,
+    CURLOPT_SSL_VERIFYPEER => true,
+]);
+
+$response  = curl_exec($ch);
+$curlError = curl_error($ch);
+curl_close($ch);
 
 if ($response === false) {
+    error_log("notifications GAS request error: " . $curlError);
     http_response_code(502);
-    echo json_encode(['success' => false, 'error' => 'Gagal menghubungi Apps Script (notifications).']);
+    echo json_encode(['success' => false, 'error' => 'Tidak dapat menghubungi server.']);
     exit;
 }
 
-echo $response;
+$result = json_decode($response, true);
+
+if ($result === null) {
+    http_response_code(502);
+    echo json_encode(['success' => false, 'error' => 'Respon server tidak valid.']);
+    exit;
+}
+
+echo json_encode($result);
