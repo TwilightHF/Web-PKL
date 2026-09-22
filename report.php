@@ -1,9 +1,6 @@
 <?php
 require_once 'auth.php';
 $role = strtoupper($_SESSION['role'] ?? '');
-$avatarSrc = !empty($_SESSION['avatar'])
-    ? htmlspecialchars($_SESSION['avatar'])
-    : "https://i.pravatar.cc/40?u=" . urlencode($_SESSION['username'] ?? 'user');
 ?>
 
 <!doctype html>
@@ -12,7 +9,6 @@ $avatarSrc = !empty($_SESSION['avatar'])
     <title>Report - NETOPS</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/png" href="assets/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
@@ -57,19 +53,8 @@ $avatarSrc = !empty($_SESSION['avatar'])
             <nav class="navbar bg-white shadow-sm px-4 py-3">
                 <span class="navbar-brand fw-bold fs-4">Report</span>
                 <div class="ms-auto d-flex align-items-center gap-3">
-                    <div class="dropdown">
-                        <button class="btn btn-link p-0 border-0 position-relative" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-bell fs-5 text-dark"></i>
-                            <span id="notifBadge" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle d-none" style="font-size:.6rem;">0</span>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end p-0 shadow-sm" style="width:320px; max-height:380px; overflow-y:auto;">
-                            <div class="p-3 border-bottom fw-bold small">Notifikasi</div>
-                            <div id="notifList" class="list-group list-group-flush">
-                                <div class="text-center text-muted small p-4">Memuat...</div>
-                            </div>
-                        </div>
-                    </div>
-                    <img src="<?= $avatarSrc ?>" class="rounded-circle" width="38" height="38" style="object-fit:cover;">
+                    <i class="bi bi-bell fs-5"></i>
+                    <img src="https://i.pravatar.cc/40" class="rounded-circle" width="38" height="38">
                     <div>
                         <div class="fw-semibold small"><?= htmlspecialchars($_SESSION['nama'] ?? 'User') ?></div>
                         <small class="text-muted"><?= htmlspecialchars($_SESSION['role'] ?? '') ?></small>
@@ -121,7 +106,10 @@ $avatarSrc = !empty($_SESSION['avatar'])
                         </div>
 
                         <button id="btnExport" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-download me-1"></i>Export
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button>
+                        <button id="btnExportPdf" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
                         </button>
                     </div>
                 </div>
@@ -168,7 +156,7 @@ $avatarSrc = !empty($_SESSION['avatar'])
                             <div class="card-body d-flex gap-2 align-items-start">
                                 <div class="icon-box bg-soft-success"><i class="bi bi-check-circle"></i></div>
                                 <div>
-                                    <h6>Confirmation</h6>
+                                    <h6>Closed Task</h6>
                                     <h3 id="sumClosed">0</h3>
                                     <div class="trend text-success" id="sumClosedTrend">&nbsp;</div>
                                 </div>
@@ -398,7 +386,8 @@ $avatarSrc = !empty($_SESSION['avatar'])
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="notifications.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
     <script>
     fetch('sidebar.html').then(res => res.text()).then(html => {
@@ -972,6 +961,73 @@ $avatarSrc = !empty($_SESSION['avatar'])
         URL.revokeObjectURL(url);
     }
 
+    // ============================================================
+    // EXPORT PDF (screenshot seluruh halaman report jadi PDF)
+    // Pakai html2canvas (render area jadi gambar) + jsPDF (susun jadi
+    // file PDF), murni di browser, tanpa perlu backend tambahan.
+    // ============================================================
+    async function exportPdf() {
+        const btn = document.getElementById("btnExportPdf");
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Menyiapkan PDF...`;
+
+        try {
+            const { jsPDF } = window.jspdf;
+
+            // Area yang mau di-screenshot: seluruh konten utama halaman
+            // (summary cards, semua chart, tabel detail), TIDAK termasuk
+            // sidebar & navbar.
+            const target = document.querySelector(".content-wrapper") || document.querySelector(".container-fluid.p-4");
+
+            if (!target) {
+                throw new Error("Area laporan tidak ditemukan.");
+            }
+
+            const canvas = await html2canvas(target, {
+                scale: 2,           // resolusi lebih tajam
+                useCORS: true,
+                backgroundColor: "#f5f7fb",
+                windowWidth: target.scrollWidth,
+                windowHeight: target.scrollHeight
+            });
+
+            const imgData = canvas.toDataURL("image/png");
+
+            // Halaman PDF disesuaikan lebar A4 (210mm), tinggi menyesuaikan
+            // rasio gambar - kalau lebih dari 1 halaman A4, otomatis dipotong
+            // jadi beberapa halaman.
+            const pdf = new jsPDF("p", "mm", "a4");
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            const imgWidth = pageWidth;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            pdf.save("report_netops_" + new Date().toISOString().slice(0, 10) + ".pdf");
+
+        } catch (err) {
+            console.error("Gagal membuat PDF:", err);
+            showToast("Gagal membuat PDF: " + err.message, true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
     ["dateFrom", "dateTo", "filterArea", "filterSla", "filterPrioritas", "quickStatus", "quickTipe"]
         .forEach(id => document.getElementById(id).addEventListener("change", applyFilters));
 
@@ -998,8 +1054,14 @@ $avatarSrc = !empty($_SESSION['avatar'])
     });
 
     document.getElementById("btnExport").addEventListener("click", exportCsv);
+    document.getElementById("btnExportPdf").addEventListener("click", exportPdf);
 
     fetchData();
     </script>
+    <script>
+      window.NOTIF_USERNAME = "<?= htmlspecialchars($_SESSION['username'] ?? '', ENT_QUOTES) ?>";
+      window.NOTIF_ROLE     = "<?= htmlspecialchars(strtoupper($_SESSION['role'] ?? ''), ENT_QUOTES) ?>";
+    </script>
+    <script src="assets/notif.js"></script>
 </body>
 </html>
